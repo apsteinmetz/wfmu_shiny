@@ -98,6 +98,9 @@ shinyServer(function(input, output) {
   output$table_artists <- renderTable({
     top_artists_reactive()
   })
+  output$table_songs <- renderTable({
+    top_songs_reactive()
+  })
   
 
 })

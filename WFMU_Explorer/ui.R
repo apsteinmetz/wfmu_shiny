@@ -13,20 +13,22 @@ shinyUI(fluidPage(
       hr(),
       sliderInput("years_back",
                   "Years Back to Include:",
-                  min = 0,  max = 25, value = c(0,5)),
+                  min = 0,  max = 30, value = c(0,5)),
       actionButton("update","Update")
     ),
     
     # Show Word Cloud
     mainPanel(
-      h4('Top Artists'),
-      tabsetPanel(type = "tabs",
+      fluidRow(
+        h4('Top Artists'),
+        tabsetPanel(type = "tabs",
                   tabPanel("Word Cloud", plotOutput("cloud")),
                   tabPanel("Table", tableOutput("table_artists"))
-      )#,
-      
-      #h4('Top Songs'),
-      #tableOutput("table")
+      )),
+      fluidRow(
+        h4('Top Songs'),
+        tableOutput("table_songs")
+      )
     )
   )
 ))
