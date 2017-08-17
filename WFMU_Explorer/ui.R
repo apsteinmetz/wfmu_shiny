@@ -1,7 +1,7 @@
 
 library(shiny)
-
-shinyUI(navbarPage("WFMU Explorer",
+library(rmarkdown)
+shinyUI(navbarPage("WFMU Explorer ALPHA VERSION",
                    # Application title
                    # tabPanel("Start Here",
                    #          mainPanel(
@@ -20,7 +20,7 @@ shinyUI(navbarPage("WFMU Explorer",
                                 hr(),
                                 sliderInput("years_back",
                                             "Years Back to Include:",
-                                            min = 0,  max = 30, value = c(0,5)),
+                                            min = 0,  max = 30, value = c(0,3)),
                                 actionButton("update","Update")
                               ),
                               
@@ -49,7 +49,9 @@ shinyUI(navbarPage("WFMU Explorer",
                             titlePanel("Nothing Here Yet")
                    ),
                    tabPanel("About",
-                            titlePanel("Nothing Here Yet")
+                            mainPanel(
+                              includeMarkdown("https://www.dropbox.com/s/f61zsbwos1jc6ga/about.md?dl=1")
+                              )
                    )
                    
 ))
