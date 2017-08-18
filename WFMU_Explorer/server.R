@@ -12,6 +12,8 @@ library(memoise)
 library(wordcloud)
 library(dplyr)
 library(rmarkdown)
+library(tidyverse)
+library(lubridate)
 
 load("playlists.Rdata")
 load('DJKey.RData')
@@ -23,7 +25,7 @@ playlists<-playlists %>%
   ungroup() %>% 
   mutate(artist_song=paste(ArtistToken,Title))
 
-get_top_artists<-memoise(function(onAir,years_back) {
+get_top_artists<-memoise(function(onAir,years_range) {
   if (onAir=='ALL') {
     DJ_set <-DJKey %>% 
       select(DJ)
@@ -35,8 +37,8 @@ get_top_artists<-memoise(function(onAir,years_back) {
   }
   top_artists<-DJ_set %>% 
     left_join(playlists,by='DJ') %>%
-    filter(AirDate>Sys.Date()-(365*years_back[2])) %>%  #date range?
-    filter(AirDate<Sys.Date()-(365*years_back[1])) %>%  #date range?
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
     group_by(ArtistToken)%>%
     summarize(play_count=n())%>%
     top_n(100) %>% 
@@ -44,7 +46,7 @@ get_top_artists<-memoise(function(onAir,years_back) {
   top_artists
 })
 
-get_top_songs<-memoise(function(onAir,years_back) {
+get_top_songs<-memoise(function(onAir,years_range) {
   if (onAir=='ALL') {
     DJ_set <-playlists
   } else {
@@ -54,8 +56,8 @@ get_top_songs<-memoise(function(onAir,years_back) {
       left_join(playlists,by='DJ')
   }
   top_songs<-DJ_set %>% 
-    filter(AirDate>Sys.Date()-(365*years_back[2])) %>%  #date range?
-    filter(AirDate<Sys.Date()-(365*years_back[1])) %>%  #date range?
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
     group_by(artist_song)%>%
     summarize(play_count=n())%>%
     top_n(25) %>% 
@@ -72,7 +74,7 @@ shinyServer(function(input, output) {
     isolate({      
       withProgress({
         setProgress(message = "Processing...")
-        ret_val<-get_top_artists(input$selection,input$years_back)
+        ret_val<-get_top_artists(input$selection,input$years_range)
       })
     })
     return(ret_val)
@@ -82,7 +84,7 @@ shinyServer(function(input, output) {
     isolate({      
       withProgress({
         setProgress(message = "Processing...")
-        ret_val<-get_top_songs(input$selection,input$years_back)
+        ret_val<-get_top_songs(input$selection,input$years_range)
       })
     })
     return(ret_val)

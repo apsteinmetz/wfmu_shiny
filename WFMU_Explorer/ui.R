@@ -1,7 +1,8 @@
 
 library(shiny)
 library(rmarkdown)
-shinyUI(navbarPage("WFMU Explorer ALPHA VERSION",
+library(lubridate)
+shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                    # Application title
                    # tabPanel("Start Here",
                    #          mainPanel(
@@ -18,9 +19,12 @@ shinyUI(navbarPage("WFMU Explorer ALPHA VERSION",
                                 selectInput("selection", "On Current Schedule:",
                                             choices = c('YES','NO','ALL')),
                                 hr(),
-                                sliderInput("years_back",
-                                            "Years Back to Include:",
-                                            min = 0,  max = 30, value = c(0,3)),
+                                sliderInput("years_range",
+                                            "Year Range:",
+                                            min = 1982,
+                                            max = year(Sys.Date()),
+                                            sep = "",
+                                            value = c(year(Sys.Date())-3,year(Sys.Date()))),
                                 actionButton("update","Update")
                               ),
                               
