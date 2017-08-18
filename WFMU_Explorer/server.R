@@ -24,7 +24,7 @@ DJKey$DJ<-as.character(DJKey$DJ)
 playlists<-playlists %>% 
   ungroup() %>% 
   mutate(artist_song=paste(ArtistToken,Title))
-
+# ----------------- STUFF FOR STATION TAB -----------------------------
 get_top_artists<-memoise(function(onAir,years_range) {
   if (onAir=='ALL') {
     DJ_set <-DJKey %>% 
@@ -37,6 +37,7 @@ get_top_artists<-memoise(function(onAir,years_range) {
   }
   top_artists<-DJ_set %>% 
     left_join(playlists,by='DJ') %>%
+    ungroup() %>% 
     filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
     filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
     group_by(ArtistToken)%>%
@@ -56,6 +57,7 @@ get_top_songs<-memoise(function(onAir,years_range) {
       left_join(playlists,by='DJ')
   }
   top_songs<-DJ_set %>% 
+    ungroup() %>% 
     filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
     filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
     group_by(artist_song)%>%
@@ -64,11 +66,40 @@ get_top_songs<-memoise(function(onAir,years_range) {
     arrange(desc(play_count))
   top_songs
 })
+# ----------------- STUFF FOR DJ TAB -----------------------------
+get_top_artists_DJ<-memoise(function(dj,years_range) {
+  top_artists<-playlists %>%
+    ungroup() %>% 
+    filter(DJ==dj) %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
+    group_by(ArtistToken)%>%
+    summarize(play_count=n())%>%
+    top_n(100) %>% 
+    arrange(desc(play_count))
+  top_artists
+})
+
+get_top_songs_DJ<-memoise(function(dj,years_range) {
+  top_songs<-playlists %>% 
+    ungroup() %>% 
+    filter(DJ==dj) %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
+    group_by(artist_song)%>%
+    summarize(play_count=n())%>%
+    top_n(25) %>% 
+    arrange(desc(play_count))
+  top_songs
+})
+# ----------------- STUFF FOR ARTIST TAB -----------------------------
+# ----------------- STUFF FOR SONG TAB -----------------------------
 
 
-
+# --------------------------------------------------------------
 # Define server logic
 shinyServer(function(input, output) {
+  # ------------------ STATION TAB -----------------
   top_artists_reactive<-reactive({
     input$update
     isolate({      
@@ -107,6 +138,49 @@ shinyServer(function(input, output) {
   output$table_songs <- renderTable({
     top_songs_reactive()
   })
+  # ------------------ DJ TAB -----------------
+  top_artists_reactive_DJ<-reactive({
+    input$DJ_update
+    isolate({      
+      withProgress({
+        setProgress(message = "Processing...")
+        DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
+        ret_val<-get_top_artists_DJ(DJ,input$DJ_years_range)
+      })
+    })
+    return(ret_val)
+  })
+  top_songs_reactive_DJ<-reactive({
+    input$DJ_update
+    isolate({      
+      withProgress({
+        setProgress(message = "Processing...")
+        DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
+        ret_val<-get_top_songs_DJ(DJ,input$DJ_years_range)
+      })
+    })
+    return(ret_val)
+  })
+  
+  output$DJ_cloud <- renderPlot({
+    wordcloud_rep <- repeatable(wordcloud,seed=1234)
+    top_artists<-top_artists_reactive_DJ() 
+    scaleFactor=2
+    wordcloud_rep(words = top_artists$ArtistToken, 
+                  freq = top_artists$play_count^scaleFactor,
+                  max.words=100, 
+                  random.order=FALSE,rot.per=0.35, 
+                  colors=brewer.pal(8, "Dark2"),
+                  scale = c(4,.3))
+  })
+  output$DJ_table_artists <- renderTable({
+    top_artists_reactive_DJ()
+  })
+  output$DJ_table_songs <- renderTable({
+    top_songs_reactive_DJ()
+  })
+  # ------------------ ARTIST TAB -----------------
+  # ------------------ SONG TAB -----------------
   
 
 })

@@ -44,7 +44,37 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                             )
                    ),
                    tabPanel("DJs",
-                            titlePanel("Nothing Here Yet")
+                            titlePanel("DJ Profiles"),
+                            sidebarLayout(
+                              # Sidebar with a slider and selection inputs
+                              sidebarPanel(
+                                selectInput("show_selection", "DJ:",
+                                            choices = DJKey$ShowName),
+                                hr(),
+                                sliderInput("DJ_years_range",
+                                            "Year Range:",
+                                            min = 1982,
+                                            max = year(Sys.Date()),
+                                            sep = "",
+                                            value = c(1982,year(Sys.Date()))),
+                                actionButton("DJ_update","Update")
+                              ),
+                              
+                              # Show Word Cloud
+                              mainPanel(
+                                fluidRow(
+                                  h4('Top Artists'),
+                                  tabsetPanel(type = "tabs",
+                                              tabPanel("Word Cloud", plotOutput("DJ_cloud")),
+                                              tabPanel("Table", tableOutput("DJ_table_artists"))
+                                  )),
+                                fluidRow(
+                                  h4('Top Songs'),
+                                  tableOutput("DJ_table_songs")
+                                )
+                              )
+                            )
+                            
                    ),
                    tabPanel("Artists",
                             titlePanel("Nothing Here Yet")
@@ -55,7 +85,7 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                    tabPanel("About",
                             mainPanel(
                               includeMarkdown("https://www.dropbox.com/s/f61zsbwos1jc6ga/about.md?dl=1")
-                              )
+                            )
                    )
                    
 ))
