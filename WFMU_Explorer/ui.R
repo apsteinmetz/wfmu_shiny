@@ -46,39 +46,38 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                               )
                             )
                    ),
-                   tabPanel("DJs",
-                            titlePanel("DJ Profiles"),
-                            sidebarLayout(
-                              # Sidebar with a slider and selection inputs
-                              sidebarPanel(
-                                selectInput("show_selection", "Show Name:",
-                                            choices = DJKey$ShowName,
-                                            selected = 'Teenage Wasteland'),
-                                hr(),
-                                uiOutput("DJ_date_slider"),
-                                # sliderInput("DJ_years_range",
-                                #             "Year Range:",
-                                #             min = min_year,
-                                #             max = year(Sys.Date()),
-                                #             sep = "",
-                                #             value = c(min_year,year(Sys.Date()))),
-                                actionButton("DJ_update","Update")
+                   navbarMenu("DJs",
+                              tabPanel("DJ Profile",
+                                       titlePanel("DJ Profiles"),
+                                       sidebarLayout(
+                                         # Sidebar with a slider and selection inputs
+                                         sidebarPanel(
+                                           selectInput("show_selection", "Show Name:",
+                                                       choices = DJKey$ShowName,
+                                                       selected = 'Teenage Wasteland'),
+                                           hr(),
+                                           uiOutput("DJ_date_slider"),
+                                           actionButton("DJ_update","Update")
+                                         ),
+                                         
+                                         # Show Word Cloud
+                                         mainPanel(
+                                           fluidRow(
+                                             h4('Top Artists'),
+                                             tabsetPanel(type = "tabs",
+                                                         tabPanel("Word Cloud", plotOutput("DJ_cloud")),
+                                                         tabPanel("Table", tableOutput("DJ_table_artists"))
+                                             )),
+                                           fluidRow(
+                                             h4('Top Songs'),
+                                             tableOutput("DJ_table_songs")
+                                           )
+                                         )
+                                       )
                               ),
-                              
-                              # Show Word Cloud
-                              mainPanel(
-                                fluidRow(
-                                  h4('Top Artists'),
-                                  tabsetPanel(type = "tabs",
-                                              tabPanel("Word Cloud", plotOutput("DJ_cloud")),
-                                              tabPanel("Table", tableOutput("DJ_table_artists"))
-                                  )),
-                                fluidRow(
-                                  h4('Top Songs'),
-                                  tableOutput("DJ_table_songs")
-                                )
+                              tabPanel("Similar DJs",
+                                       titlePanel("Nothing Here Yet")
                               )
-                            )
                             
                    ),
                    tabPanel("Artists",

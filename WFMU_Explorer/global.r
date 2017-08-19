@@ -4,6 +4,8 @@ library(dplyr)
 
 load('DJKey.RData')
 load("playlists.Rdata")
+load('djSimilarity.RData')
+load('djdtm.RData')
 
 #load(file=url("https://www.dropbox.com/s/zobdwfuc3x1p2h8/playlists.Rdata?dl=1")) #playlists
 #load(file=url("https://www.dropbox.com/s/are6e2jx8djvkl4/DJKey.RData?dl=1")) #DJKey
