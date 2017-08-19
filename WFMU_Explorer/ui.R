@@ -2,6 +2,9 @@
 library(shiny)
 library(rmarkdown)
 library(lubridate)
+
+load('DJKey.RData')
+
 shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                    # Application title
                    # tabPanel("Start Here",
