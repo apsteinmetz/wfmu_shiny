@@ -24,7 +24,7 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                                 hr(),
                                 sliderInput("years_range",
                                             "Year Range:",
-                                            min = 1982,
+                                            min = min_year,
                                             max = year(Sys.Date()),
                                             sep = "",
                                             value = c(year(Sys.Date())-3,year(Sys.Date()))),
@@ -51,15 +51,17 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                             sidebarLayout(
                               # Sidebar with a slider and selection inputs
                               sidebarPanel(
-                                selectInput("show_selection", "DJ:",
-                                            choices = DJKey$ShowName),
+                                selectInput("show_selection", "Show Name:",
+                                            choices = DJKey$ShowName,
+                                            selected = 'Teenage Wasteland'),
                                 hr(),
-                                sliderInput("DJ_years_range",
-                                            "Year Range:",
-                                            min = 1982,
-                                            max = year(Sys.Date()),
-                                            sep = "",
-                                            value = c(1982,year(Sys.Date()))),
+                                uiOutput("DJ_date_slider"),
+                                # sliderInput("DJ_years_range",
+                                #             "Year Range:",
+                                #             min = min_year,
+                                #             max = year(Sys.Date()),
+                                #             sep = "",
+                                #             value = c(min_year,year(Sys.Date()))),
                                 actionButton("DJ_update","Update")
                               ),
                               
@@ -87,7 +89,7 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                    ),
                    tabPanel("About",
                             mainPanel(
-                              includeMarkdown("https://www.dropbox.com/s/f61zsbwos1jc6ga/about.md?dl=1")
+                              includeMarkdown("about.md")
                             )
                    )
                    

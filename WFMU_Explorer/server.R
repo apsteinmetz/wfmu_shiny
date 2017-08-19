@@ -131,13 +131,29 @@ shinyServer(function(input, output) {
     top_songs_reactive()
   })
   # ------------------ DJ TAB -----------------
+  output$DJ_date_slider <- renderUI({
+    sliderInput("DJ_years_range",
+                "Year Range:",
+                min = filter(DJKey,ShowName==input$show_selection) %>% pull(FirstShow) %>% year(),
+                max = filter(DJKey,ShowName==input$show_selection) %>% pull(LastShow) %>% year(),
+                sep = "",
+                value = c(min,max)
+    )
+    
+  })
+
   top_artists_reactive_DJ<-reactive({
     input$DJ_update
     isolate({      
       withProgress({
         setProgress(message = "Processing...")
         DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
-        ret_val<-get_top_artists_DJ(DJ,input$DJ_years_range)
+        if (is.null(input$DJ_years_range)) {
+          years_range<-c(1982,year(Sys.Date()))
+        } else{
+          years_range <- input$DJ_years_range
+        }
+        ret_val<-get_top_artists_DJ(DJ,years_range)
       })
     })
     return(ret_val)
@@ -148,7 +164,12 @@ shinyServer(function(input, output) {
       withProgress({
         setProgress(message = "Processing...")
         DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
-        ret_val<-get_top_songs_DJ(DJ,input$DJ_years_range)
+        if (is.null(input$DJ_years_range)) {
+          years_range<-c(1982,year(Sys.Date()))
+        } else{
+          years_range <- input$DJ_years_range
+        }
+        ret_val<-get_top_songs_DJ(DJ,years_range)
       })
     })
     return(ret_val)
