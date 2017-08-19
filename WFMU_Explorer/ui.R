@@ -2,8 +2,15 @@
 library(shiny)
 library(rmarkdown)
 library(lubridate)
+library(dplyr)
 
 load('DJKey.RData')
+load("playlists.Rdata")
+DJKey<-DJKey %>% 
+  mutate(DJ=as.character(DJ)) %>% 
+  semi_join(playlists,by='DJ') %>% 
+  arrange(ShowName)
+
 
 shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                    # Application title
@@ -19,7 +26,7 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                             sidebarLayout(
                               # Sidebar with a slider and selection inputs
                               sidebarPanel(
-                                selectInput("selection", "On Current Schedule:",
+                                selectInput("selection", "Is DJ On Current Schedule?:",
                                             choices = c('YES','NO','ALL')),
                                 hr(),
                                 sliderInput("years_range",
