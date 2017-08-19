@@ -75,10 +75,33 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                                          )
                                        )
                               ),
-                              tabPanel("Similar DJs",
+                              tabPanel("Find Similar DJs",
+                                       titlePanel("DJ Profiles"),
+                                       sidebarLayout(
+                                         # Sidebar with a slider and selection inputs
+                                         sidebarPanel(
+                                           selectInput("show_selection_2", "Show Name:",
+                                                       choices = DJKey$ShowName,
+                                                       selected = 'Teenage Wasteland')
+                                         ),
+                                         
+                                         # Show Word Cloud
+                                         mainPanel(
+                                           fluidRow(
+                                             h4('Most Similar Shows'),
+                                             tableOutput("DJ_table_similar")
+                                             
+                                             ),
+                                           fluidRow(
+                                             h4('Common Links')
+                                           )
+                                         )
+                                       )
+                                       ),
+                              tabPanel("Compare to a specific DJ",
                                        titlePanel("Nothing Here Yet")
                               )
-                            
+                              
                    ),
                    tabPanel("Artists",
                             titlePanel("Nothing Here Yet")

@@ -25,7 +25,7 @@ get_top_artists<-memoise(function(onAir,years_range) {
     DJ_set <-DJKey %>% 
       filter(onSched==onAir) %>% #on Sched or off?
       select(DJ) 
-      
+    
   }
   top_artists<-DJ_set %>% 
     left_join(playlists,by='DJ') %>%
@@ -84,6 +84,8 @@ get_top_songs_DJ<-memoise(function(dj,years_range) {
     arrange(desc(play_count))
   top_songs
 })
+
+
 # ----------------- STUFF FOR ARTIST TAB -----------------------------
 # ----------------- STUFF FOR SONG TAB -----------------------------
 
@@ -141,7 +143,7 @@ shinyServer(function(input, output) {
     )
     
   })
-
+  
   top_artists_reactive_DJ<-reactive({
     input$DJ_update
     isolate({      
@@ -192,8 +194,18 @@ shinyServer(function(input, output) {
   output$DJ_table_songs <- renderTable({
     top_songs_reactive_DJ()
   })
+  
+  output$DJ_table_similar <- renderTable({
+    dj1<-filter(DJKey,ShowName==input$show_selection_2) %>% pull(DJ)
+    similar_DJS<-dj_similarity_tidy %>% 
+      filter(DJ1==dj1) %>% 
+      arrange(desc(Similarity)) %>% 
+      top_n(10) %>% pull(DJ2)
+    DJKey %>% filter(DJ %in% similar_DJS)
+  })
+  
   # ------------------ ARTIST TAB -----------------
   # ------------------ SONG TAB -----------------
   
-
+  
 })
