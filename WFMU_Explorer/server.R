@@ -30,8 +30,8 @@ get_top_artists<-memoise(function(onAir,years_range) {
   top_artists<-DJ_set %>% 
     left_join(playlists,by='DJ') %>%
     ungroup() %>% 
-    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
-    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
     group_by(ArtistToken)%>%
     summarize(play_count=n())%>%
     top_n(100) %>% 
@@ -50,8 +50,8 @@ get_top_songs<-memoise(function(onAir,years_range) {
   }
   top_songs<-DJ_set %>% 
     ungroup() %>% 
-    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
-    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
     group_by(artist_song)%>%
     summarize(play_count=n())%>%
     top_n(25) %>% 
@@ -63,8 +63,8 @@ get_top_artists_DJ<-memoise(function(dj,years_range) {
   top_artists<-playlists %>%
     ungroup() %>% 
     filter(DJ==dj) %>% 
-    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
-    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
     group_by(ArtistToken)%>%
     summarize(play_count=n())%>%
     top_n(100) %>% 
@@ -76,8 +76,8 @@ get_top_songs_DJ<-memoise(function(dj,years_range) {
   top_songs<-playlists %>% 
     ungroup() %>% 
     filter(DJ==dj) %>% 
-    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  #date range?
-    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  #date range?
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%
     group_by(artist_song)%>%
     summarize(play_count=n())%>%
     top_n(25) %>% 
@@ -200,8 +200,14 @@ shinyServer(function(input, output) {
     similar_DJS<-dj_similarity_tidy %>% 
       filter(DJ1==dj1) %>% 
       arrange(desc(Similarity)) %>% 
-      top_n(10) %>% pull(DJ2)
-    DJKey %>% filter(DJ %in% similar_DJS)
+      top_n(10) %>% 
+      ungroup() %>% 
+      rename(DJ=DJ2) %>% 
+      select(DJ,Similarity) %>% 
+      left_join(DJKey,by='DJ') %>% 
+      select(ShowName,onSched,showCount,Similarity) %>% 
+      mutate(Similarity=paste0(trunc(Similarity*100),"%"))
+    similar_DJS
   })
   
   # ------------------ ARTIST TAB -----------------
