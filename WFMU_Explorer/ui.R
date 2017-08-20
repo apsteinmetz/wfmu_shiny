@@ -93,7 +93,7 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                                              
                                              ),
                                            fluidRow(
-                                             h4('Common Links')
+                                             h4('DJ Neighborhood')
                                            )
                                          )
                                        )
