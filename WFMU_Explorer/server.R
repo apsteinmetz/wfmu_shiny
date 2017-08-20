@@ -14,6 +14,8 @@ library(dplyr)
 library(rmarkdown)
 library(tidyverse)
 library(lubridate)
+library(igraph)
+library(circlize)
 
 
 # ----------------- STUFF FOR STATION TAB -----------------------------
@@ -86,17 +88,20 @@ get_top_songs_DJ<-memoise(function(dj,years_range) {
 })
 
 get_similar_DJs<-memoise(function(dj) {
-  dj_similarity_tidy %>% 
+  similar_DJs<-dj_similarity_tidy %>% 
   filter(DJ1==dj) %>% 
   arrange(desc(Similarity)) %>% 
   top_n(10) %>% 
   ungroup() %>% 
   rename(DJ=DJ2) %>% 
   select(DJ,Similarity) %>% 
-  left_join(DJKey,by='DJ') %>% 
-  select(ShowName,DJ,onSched,showCount,Similarity) %>% 
-  mutate(Similarity=paste0(trunc(Similarity*100),"%"))
-similar_DJS
+  left_join(DJKey,by='DJ') %>%
+  mutate(Similarity=paste0(trunc(Similarity*100),"%")) %>% 
+  #add target dj to top of table so we see the 2-letter code for the chord chart
+  full_join(filter(DJKey,DJ==dj)) %>% 
+  select(ShowName,DJ,onSched,showCount,Similarity) 
+    
+similar_DJs
 })
 
 
@@ -214,8 +219,10 @@ shinyServer(function(input, output) {
     get_similar_DJs(dj1)
   })
   output$DJ_chord <- renderPlot({
-    similar_DJs<-get_similar_DJs(dj1)$DJ
-    dj_mat<-dj_mat<-as.matrix(djdtm[c(similar_DJs,dj1),])
+    dj1<-filter(DJKey,ShowName==input$show_selection_2) %>% pull(DJ)
+    # get similar djs but remove target dj or matrix stuff will break
+    sim_DJs<-get_similar_DJs(dj1) %>% filter(DJ!=dj1) %>% pull(DJ)
+    dj_mat<-dj_mat<-as.matrix(djdtm[c(sim_DJs,dj1),])
     adj_mat1 = dj_mat %*% t(dj_mat)
     # set zeros in diagonal
     diag(adj_mat1) = 0

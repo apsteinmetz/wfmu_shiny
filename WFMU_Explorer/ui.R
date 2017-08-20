@@ -100,7 +100,31 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                                        )
                                        ),
                               tabPanel("Compare to a specific DJ",
-                                       titlePanel("Nothing Here Yet")
+                                       sidebarLayout(
+                                         # Sidebar with a slider and selection inputs
+                                         sidebarPanel(
+                                           selectInput("show_selection_3", "Show Name:",
+                                                       choices = DJKey$ShowName,
+                                                       selected = 'Teenage Wasteland'),
+                                           selectInput("show_selection_4", "Show Name:",
+                                                       choices = DJKey$ShowName,
+                                                       selected = 'Bob Brainen')
+                                         ),
+                                         
+                                         # Show Word Cloud
+                                         mainPanel(
+                                           fluidRow(
+                                             h4('Artists in Common')
+                                             #, tableOutput("DJ_table_similar")
+                                             
+                                           ),
+                                           fluidRow(
+                                             h4('Songs in Common') 
+                                            # , plotOutput("DJ_chord")
+                                           )
+                                         )
+                                       )
+                                       
                               )
                               
                    ),
