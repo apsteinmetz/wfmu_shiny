@@ -93,7 +93,8 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                                              
                                              ),
                                            fluidRow(
-                                             h4('DJ Neighborhood')
+                                             h4('DJ Neighborhood') 
+                                             , plotOutput("DJ_chord")
                                            )
                                          )
                                        )

@@ -85,6 +85,20 @@ get_top_songs_DJ<-memoise(function(dj,years_range) {
   top_songs
 })
 
+get_similar_DJs<-memoise(function(dj) {
+  dj_similarity_tidy %>% 
+  filter(DJ1==dj) %>% 
+  arrange(desc(Similarity)) %>% 
+  top_n(10) %>% 
+  ungroup() %>% 
+  rename(DJ=DJ2) %>% 
+  select(DJ,Similarity) %>% 
+  left_join(DJKey,by='DJ') %>% 
+  select(ShowName,DJ,onSched,showCount,Similarity) %>% 
+  mutate(Similarity=paste0(trunc(Similarity*100),"%"))
+similar_DJS
+})
+
 
 # ----------------- STUFF FOR ARTIST TAB -----------------------------
 # ----------------- STUFF FOR SONG TAB -----------------------------
@@ -197,17 +211,38 @@ shinyServer(function(input, output) {
   
   output$DJ_table_similar <- renderTable({
     dj1<-filter(DJKey,ShowName==input$show_selection_2) %>% pull(DJ)
-    similar_DJS<-dj_similarity_tidy %>% 
-      filter(DJ1==dj1) %>% 
-      arrange(desc(Similarity)) %>% 
-      top_n(10) %>% 
-      ungroup() %>% 
-      rename(DJ=DJ2) %>% 
-      select(DJ,Similarity) %>% 
-      left_join(DJKey,by='DJ') %>% 
-      select(ShowName,onSched,showCount,Similarity) %>% 
-      mutate(Similarity=paste0(trunc(Similarity*100),"%"))
-    similar_DJS
+    get_similar_DJs(dj1)
+  })
+  output$DJ_chord <- renderPlot({
+    similar_DJs<-get_similar_DJs(dj1)$DJ
+    dj_mat<-dj_mat<-as.matrix(djdtm[c(similar_DJs,dj1),])
+    adj_mat1 = dj_mat %*% t(dj_mat)
+    # set zeros in diagonal
+    diag(adj_mat1) = 0
+    #change from dJ to show name
+    #dimnames(adj_mat1)<-rep(list(Docs=filter(DJKey,DJ  %in% row.names(adj_mat1)) %>% pull(ShowName)),2)
+    # create graph from adjacency matrix
+    graph_artists1 = graph.adjacency(adj_mat1, mode="undirected", weighted=TRUE, diag=FALSE)
+    # get edgelist 1
+    edges1 = get.edgelist(graph_artists1)
+    
+    # arc widths based on graph_artists1
+    w1 = E(graph_artists1)$weight
+    lwds = w1/20000
+    #chord diagrams
+    cdf<-bind_cols(as_tibble(edges1),value=lwds)
+    #reorder columns gets a better appearance
+    #cdf<- cdf %>% select(V2,V1,value)
+    #make show names compact
+    #cdf$V2<-str_replace_all(cdf$V2,"[^A-Z^a-z^ ^0-9]","")
+    #cdf$V1<-str_replace_all(cdf$V1,"[^A-Z^a-z^ ^0-9]","")
+    #cdf<-cdf %>% lapply(str_replace_all,"The ","") %>% bind_rows
+    #cdf<-cdf %>% lapply(str_trim) %>% bind_rows
+    #cdf<-cdf %>% lapply(str_replace_all," ",'\n') %>% bind_rows
+    #cdf$value <- as.numeric(cdf$value)
+    colset<-RColorBrewer::brewer.pal(11,'Paired')
+    chordDiagram(cdf,annotationTrack = c('grid','name'),grid.col = colset)
+    
   })
   
   # ------------------ ARTIST TAB -----------------
