@@ -112,7 +112,7 @@ get_sim_index<-memoise(function(dj1,dj2) {
   DJ_sim
 })
 
-artists_in_common<-function(dj1,dj2){
+artists_in_common<-memoise(function(dj1,dj2){
   artists<-playlists %>% 
     filter(DJ %in% c(dj1,dj2)) %>% 
     group_by(DJ,ArtistToken) %>% 
@@ -124,11 +124,12 @@ artists_in_common<-function(dj1,dj2){
     #select(ArtistToken,sum,FaveIndex) %>% 
     top_n(10) %>% 
     select(-sum_x,-sd_x) %>% 
-    arrange(desc(FaveIndex))
-  return(artists)
-}
+    arrange(desc(FaveIndex)) %>% 
+    select(-FaveIndex)
+  artists
+})
 
-songs_in_common<-function(dj1,dj2){
+songs_in_common<-memoise(function(dj1,dj2){
   songs<-playlists %>% 
     filter(DJ %in% c(dj1,dj2)) %>%
     mutate(Artist_Title=paste(Artist,Title)) %>% 
@@ -141,9 +142,10 @@ songs_in_common<-function(dj1,dj2){
     #select(ArtistToken,sum,FaveIndex) %>% 
     top_n(10) %>% 
     select(-sum_x,-sd_x) %>% 
-    arrange(desc(FaveIndex))
-  return(songs)
-}
+    arrange(desc(FaveIndex)) %>% 
+    select(-FaveIndex)
+  songs
+})
 
 
 # ----------------- STUFF FOR ARTIST TAB -----------------------------
@@ -293,13 +295,13 @@ shinyServer(function(input, output) {
     
   })
   
-  output$DJ_plot_sim_index <- renderPlot({
-    dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
-    dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
-    ggplot(dj_similarity_tidy,aes(Similarity))+
-      geom_density()+
-      geom_vline(xintercept = get_sim_index(dj1,dj2),color='blue')
-  })
+output$DJ_plot_sim_index <- renderPlot({
+   dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
+   dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
+   ggplot(dj_similarity_tidy,aes(Similarity))+
+     geom_density()+
+     geom_vline(xintercept = get_sim_index(dj1,dj2),color='blue')
+ })
   
   output$DJ_table_common_songs <- renderTable({
     dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
