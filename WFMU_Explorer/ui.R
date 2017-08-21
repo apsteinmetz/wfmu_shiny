@@ -88,7 +88,7 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                                          # Show Word Cloud
                                          mainPanel(
                                            fluidRow(
-                                             h4('Most Similar Shows'),
+                                             h4('Most Similar Shows Based on Common Artists'),
                                              tableOutput("DJ_table_similar")
                                              
                                              ),
@@ -114,13 +114,18 @@ shinyUI(navbarPage("WFMU Playlist Explorer ALPHA VERSION",
                                          # Show Word Cloud
                                          mainPanel(
                                            fluidRow(
-                                             h4('Artists in Common')
-                                             #, tableOutput("DJ_table_similar")
+                                             h4('Similarity Index')
+                                             , renderPlot("DJ_plot_sim_index")
                                              
                                            ),
                                            fluidRow(
-                                             h4('Songs in Common') 
-                                            # , plotOutput("DJ_chord")
+                                             h4('Artists in Common')
+                                             , renderPlot("DJ_table_common_artists")
+                                             
+                                           ),
+                                           fluidRow(
+                                             h4('Songs in Common')
+                                             , renderPlot("DJ_table_common_songs")
                                            )
                                          )
                                        )

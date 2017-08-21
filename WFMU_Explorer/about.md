@@ -1,5 +1,5 @@
 ---
-title: "version: 0.2"
+title: "version: 0.21"
 date: "August 17, 2017"
 output: html_document
 ---
@@ -7,9 +7,10 @@ output: html_document
 
 ## About WFMU Playlist Explorer
 
-*Changes in 0.21: restricts DJ year range to years available.
+*Changes in 0.21: includes DJ similarity.
 
-*Changes in 0.2: includes DJ top plays.
+*Changes in 0.20: includes DJ top plays.
+
 
 Free form radio, WFMU.ORG, maintains a huge trove of past playlists from many DJ's radio shows.  More recently, web-only programming has been added to this.  This dataset offers lots of opportunities for analysis.  I scraped all the playlists I could from the web site and started asking questions.  The data set is here for your own explorations. It represents over a million plays spanning decades.
 

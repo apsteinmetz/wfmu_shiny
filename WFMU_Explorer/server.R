@@ -16,6 +16,7 @@ library(tidyverse)
 library(lubridate)
 library(igraph)
 library(circlize)
+library(xts)
 
 
 # ----------------- STUFF FOR STATION TAB -----------------------------
@@ -103,6 +104,46 @@ get_similar_DJs<-memoise(function(dj) {
     
 similar_DJs
 })
+
+get_sim_index<-memoise(function(dj1,dj2) {
+  DJ_sim<-dj_similarity_tidy %>% 
+    filter(DJ1==dj1,DJ2==dj2) %>%
+    pull(Similarity)
+  DJ_sim
+})
+
+artists_in_common<-function(dj1,dj2){
+  artists<-playlists %>% 
+    filter(DJ %in% c(dj1,dj2)) %>% 
+    group_by(DJ,ArtistToken) %>% 
+    summarise(n=n()) %>%
+    spread(DJ,n) %>% 
+    mutate(sum_x=rowSums(.[2:ncol(.)],na.rm=TRUE)) %>% 
+    mutate(sd_x=.[2:ncol(.)] %>% na.fill(0) %>% apply(1,sd)) %>% 
+    mutate(FaveIndex=trunc(sum_x-1.8*sd_x)) %>% 
+    #select(ArtistToken,sum,FaveIndex) %>% 
+    top_n(10) %>% 
+    select(-sum_x,-sd_x) %>% 
+    arrange(desc(FaveIndex))
+  return(artists)
+}
+
+songs_in_common<-function(dj1,dj2){
+  songs<-playlists %>% 
+    filter(DJ %in% c(dj1,dj2)) %>%
+    mutate(Artist_Title=paste(Artist,Title)) %>% 
+    group_by(DJ,Artist_Title) %>% 
+    summarise(n=n()) %>%
+    spread(DJ,n) %>% 
+    mutate(sum_x=rowSums(.[2:ncol(.)],na.rm=TRUE)) %>% 
+    mutate(sd_x=.[2:ncol(.)] %>% na.fill(0) %>% apply(1,sd)) %>% 
+    mutate(FaveIndex=trunc((sum_x-1.8*sd_x)*10)) %>% #apply some arbitrary scaling
+    #select(ArtistToken,sum,FaveIndex) %>% 
+    top_n(10) %>% 
+    select(-sum_x,-sd_x) %>% 
+    arrange(desc(FaveIndex))
+  return(songs)
+}
 
 
 # ----------------- STUFF FOR ARTIST TAB -----------------------------
@@ -250,6 +291,25 @@ shinyServer(function(input, output) {
     colset<-RColorBrewer::brewer.pal(11,'Paired')
     chordDiagram(cdf,annotationTrack = c('grid','name'),grid.col = colset)
     
+  })
+  
+  output$DJ_plot_sim_index <- renderPlot({
+    dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
+    dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
+    ggplot(dj_similarity_tidy,aes(Similarity))+
+      geom_density()+
+      geom_vline(xintercept = get_sim_index(dj1,dj2),color='blue')
+  })
+  
+  output$DJ_table_common_songs <- renderTable({
+    dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
+    dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
+    songs_in_common(dj1,dj2)
+  })
+  output$DJ_table_common_artists <- renderTable({
+    dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
+    dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
+    artists_in_common(dj1,dj2)
   })
   
   # ------------------ ARTIST TAB -----------------
