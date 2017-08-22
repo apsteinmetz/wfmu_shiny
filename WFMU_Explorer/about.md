@@ -1,11 +1,14 @@
 ---
-title: "version: 0.21"
-date: "August 17, 2017"
+title: "version: 0.22"
+date: "August 21, 2017"
 output: html_document
 ---
 ![](https://wfmu.org/wp-content/uploads/2016/03/BadgeCourage.png) 
 
 ## About WFMU Playlist Explorer
+
+
+*Changes in 0.22: includes 2-DJ comparison.
 
 *Changes in 0.21: includes DJ similarity.
 
