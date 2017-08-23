@@ -7,6 +7,7 @@ output: html_document
 
 ## About WFMU Playlist Explorer
 
+*Changes in 0.30: includes artist play count history by DJ.
 
 *Changes in 0.22: includes 2-DJ comparison.
 

@@ -90,19 +90,19 @@ get_top_songs_DJ<-memoise(function(dj,years_range) {
 
 get_similar_DJs<-memoise(function(dj) {
   similar_DJs<-dj_similarity_tidy %>% 
-  filter(DJ1==dj) %>% 
-  arrange(desc(Similarity)) %>% 
-  top_n(10) %>% 
-  ungroup() %>% 
-  rename(DJ=DJ2) %>% 
-  select(DJ,Similarity) %>% 
-  left_join(DJKey,by='DJ') %>%
-  mutate(Similarity=paste0(trunc(Similarity*100),"%")) %>% 
-  #add target dj to top of table so we see the 2-letter code for the chord chart
-  full_join(filter(DJKey,DJ==dj)) %>% 
-  select(ShowName,DJ,onSched,showCount,Similarity) 
-    
-similar_DJs
+    filter(DJ1==dj) %>% 
+    arrange(desc(Similarity)) %>% 
+    top_n(10) %>% 
+    ungroup() %>% 
+    rename(DJ=DJ2) %>% 
+    select(DJ,Similarity) %>% 
+    left_join(DJKey,by='DJ') %>%
+    mutate(Similarity=paste0(trunc(Similarity*100),"%")) %>% 
+    #add target dj to top of table so we see the 2-letter code for the chord chart
+    full_join(filter(DJKey,DJ==dj)) %>% 
+    select(ShowName,DJ,onSched,showCount,Similarity) 
+  
+  similar_DJs
 })
 
 get_sim_index<-memoise(function(dj1,dj2) {
@@ -149,6 +149,44 @@ songs_in_common<-memoise(function(dj1,dj2){
 
 
 # ----------------- STUFF FOR ARTIST TAB -----------------------------
+play_count_by_DJ<-memoise(function(artist_token,years_range,threshold){
+  pc<- playlists %>% 
+    ungroup() %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
+    mutate(DJ=as.character(DJ)) %>% 
+    filter(ArtistToken==artist_token) %>% 
+    mutate(AirDate=as.yearqtr(AirDate))  %>% 
+    group_by(DJ,AirDate) %>% 
+    summarise(Spins=n()) %>% 
+    arrange(AirDate)
+  
+  pc1<- pc %>% 
+    filter(Spins>=threshold)
+  
+  #lump together all DJ's who played the artist less than 'threshold' times
+  pc2<- pc %>% 
+    filter(Spins<threshold) %>% 
+    group_by(AirDate) %>% 
+    summarise(Spins=n()) %>% 
+    mutate(ShowName='AllOther')
+  
+  pc<-pc1 %>% 
+    left_join(DJKey) %>% 
+    bind_rows(pc2) %>% 
+    select(AirDate,ShowName,Spins)
+  return(pc)
+})
+
+top_songs_for_artist<-memoise(function(artist_token){
+  ts<-playlists %>% filter(ArtistToken==artist_token) %>% 
+    group_by(Title) %>% 
+    summarise(count=n()) %>% 
+    arrange(desc(count))
+  return(ts)
+})
+
+
 # ----------------- STUFF FOR SONG TAB -----------------------------
 
 
@@ -239,7 +277,7 @@ shinyServer(function(input, output) {
     return(ret_val)
   })
   
-  output$DJ_cloud <- renderPlot({
+    output$DJ_cloud <- renderPlot({
     wordcloud_rep <- repeatable(wordcloud,seed=1234)
     top_artists<-top_artists_reactive_DJ() 
     scaleFactor=2
@@ -281,27 +319,18 @@ shinyServer(function(input, output) {
     lwds = w1/20000
     #chord diagrams
     cdf<-bind_cols(as_tibble(edges1),value=lwds)
-    #reorder columns gets a better appearance
-    #cdf<- cdf %>% select(V2,V1,value)
-    #make show names compact
-    #cdf$V2<-str_replace_all(cdf$V2,"[^A-Z^a-z^ ^0-9]","")
-    #cdf$V1<-str_replace_all(cdf$V1,"[^A-Z^a-z^ ^0-9]","")
-    #cdf<-cdf %>% lapply(str_replace_all,"The ","") %>% bind_rows
-    #cdf<-cdf %>% lapply(str_trim) %>% bind_rows
-    #cdf<-cdf %>% lapply(str_replace_all," ",'\n') %>% bind_rows
-    #cdf$value <- as.numeric(cdf$value)
     colset<-RColorBrewer::brewer.pal(11,'Paired')
     chordDiagram(cdf,annotationTrack = c('grid','name'),grid.col = colset)
     
   })
   
-output$DJ_plot_sim_index <- renderPlot({
-   dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
-   dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
-   ggplot(dj_similarity_tidy,aes(Similarity))+
-     geom_density()+
-     geom_vline(xintercept = get_sim_index(dj1,dj2),color='blue')
- })
+  output$DJ_plot_sim_index <- renderPlot({
+    dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
+    dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
+    ggplot(dj_similarity_tidy,aes(Similarity))+
+      geom_density()+
+      geom_vline(xintercept = get_sim_index(dj1,dj2),color='blue')
+  })
   
   output$DJ_table_common_songs <- renderTable({
     dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
@@ -314,7 +343,30 @@ output$DJ_plot_sim_index <- renderPlot({
     artists_in_common(dj1,dj2)
   })
   
-  # ------------------ ARTIST TAB -----------------
+  #------------------------------ARTIST TAB-----------------------------------
+  reactive_artists<-reactive({
+    input$artist_update
+    isolate({      
+      withProgress({
+        setProgress(message = "Processing...")
+        ret_val<-play_count_by_DJ(input$artist_selection,
+                                  input$artist_years_range,
+                                  input$artist_all_other)
+      })
+    })
+    return(ret_val)
+  })
+  
+  output$artist_history_plot <- renderPlot({
+    artist_history<-reactive_artists()
+    gg<-artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ShowName))+geom_col()
+    gg<-gg+labs(title=paste("Number of",input$artist_selection,"plays every quarter by DJ"))
+    gg<-gg+scale_x_continuous()
+    gg
+  })
+  output$top_songs_for_artist<-renderTable({
+    top_songs_for_artist(input$artist_selection)
+  })
   # ------------------ SONG TAB -----------------
   
   

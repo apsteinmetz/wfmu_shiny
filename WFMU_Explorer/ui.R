@@ -7,6 +7,7 @@ library(dplyr)
 
 shinyUI(
   navbarPage("WFMU Playlist Explorer ALPHA VERSION",
+             # --------- Station/ ----------------------------------
              tabPanel("Station",
                       titlePanel("Top Artists and Songs Played on WFMU"),
                       
@@ -40,7 +41,9 @@ shinyUI(
                         )
                       )
              ),
+             # --------- DJs/ ------------------------------------
              navbarMenu("DJs",
+                        # --------- DJs/DJ Profile -----------------------------
                         tabPanel("DJ Profile",
                                  titlePanel("DJ Profile"),
                                  sidebarLayout(
@@ -68,6 +71,7 @@ shinyUI(
                                    )
                                  )
                         ),
+                        # --------- DJs/Find Simlar DJs -------------------
                         tabPanel("Find Similar DJs",
                                  titlePanel("Find Similar DJs"),
                                  sidebarLayout(
@@ -92,6 +96,7 @@ shinyUI(
                                    )
                                  )
                         ),
+                        # --------- DJs/Compare Two DJs -----------------------
                         tabPanel("Compare Two DJs",
                                  titlePanel("Compare Two DJs"),
                                  fluidRow(
@@ -128,12 +133,54 @@ shinyUI(
                                  )
                         )
              ),
+             # --------- Artists/ ----------------------------------
              tabPanel("Artists",
-                      titlePanel("Nothing Here Yet")
+                      titlePanel("Artists Plays by DJ Over Time"),
+                      sidebarLayout(
+                        # Sidebar with a slider and selection inputs
+                        sidebarPanel(
+                          h5('Artist Token is first two words of artist/band with no space.'),
+                          selectInput("artist_selection", "Select Artist Token (It's a long list. Slow):",
+                                      selected='Abba',
+                                      #quicker to generate or load      
+                                      choices=ArtistToken_list
+                                      # choices = playlists %>%
+                                      #   ungroup() %>%
+                                      #   select(ArtistToken) %>%
+                                      #   distinct() %>%
+                                      #   arrange(ArtistToken) %>%
+                                      #   pull(ArtistToken)
+                          ),
+                          hr(),
+                          sliderInput("artist_years_range",
+                                      "Year Range:",
+                                      min = min_year,
+                                      max = year(Sys.Date()),
+                                      sep = "",
+                                      value = c(year(Sys.Date())-3,year(Sys.Date()))),
+                          fluidRow(
+                            selectInput("artist_all_other",
+                                        "Threshold of Minimum Plays to show DJ",
+                                        selected = 3,
+                                        choices=1:10),
+                            actionButton("artist_update","Update")
+                          )
+                        ),
+                        
+                        mainPanel(
+                          fluidRow(
+                            h4('Plays per Quarter'),
+                            plotOutput("artist_history_plot"),
+                            tableOutput('top_songs_for_artist')
+                          )
+                        )
+                      )
              ),
+             # --------- Songs/ ----------------------------------
              tabPanel("Songs",
                       titlePanel("Nothing Here Yet")
              ),
+             # --------- About/ ----------------------------------
              tabPanel("About",
                       mainPanel(
                         includeMarkdown("about.md")

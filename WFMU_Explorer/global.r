@@ -2,10 +2,13 @@ library(rmarkdown)
 library(lubridate)
 library(dplyr)
 
+#setwd(paste0(getwd(),"/wfmu_explorer"))
+
 load('DJKey.RData')
 load("playlists.Rdata")
 load('djSimilarity.RData')
 load('djdtm.RData')
+load('artisttoken_list.rdata')
 
 #load(file=url("https://www.dropbox.com/s/zobdwfuc3x1p2h8/playlists.Rdata?dl=1")) #playlists
 #load(file=url("https://www.dropbox.com/s/are6e2jx8djvkl4/DJKey.RData?dl=1")) #DJKey
