@@ -282,7 +282,7 @@ shinyServer(function(input, output) {
     return(ret_val)
   })
   
-    output$DJ_cloud <- renderPlot({
+  output$DJ_cloud <- renderPlot({
     wordcloud_rep <- repeatable(wordcloud,seed=1234)
     top_artists<-top_artists_reactive_DJ() 
     scaleFactor=2
@@ -349,8 +349,25 @@ shinyServer(function(input, output) {
   })
   
   #------------------------------ARTIST TAB-----------------------------------
+  reactive_artists_letters<-reactive({
+    input$artist_update_1
+    isolate({      
+      withProgress({
+        setProgress(message = "Processing...")
+        ret_val<-playlists %>%
+          ungroup() %>%
+          filter(grepl(paste0("^",str_to_title(input$artist_letters)),ArtistToken)) %>% 
+          select(ArtistToken) %>%
+          distinct() %>%
+          arrange(ArtistToken) %>%
+          pull(ArtistToken)
+      })
+    })
+    return(ret_val)
+  })
+  
   reactive_artists<-reactive({
-    input$artist_update
+    input$artist_update_2
     isolate({      
       withProgress({
         setProgress(message = "Processing...")
@@ -361,17 +378,12 @@ shinyServer(function(input, output) {
     })
     return(ret_val)
   })
-
+  
   output$SelectArtist<-renderUI({
-   selectInput("artist_selection", "Select Artist Token (It's a long list. Slow):",
-               choices = playlists %>%
-                 ungroup() %>%
-                 filter(grepl(paste0("^",str_to_title(input$artist_letters)),ArtistToken)) %>% 
-                 select(ArtistToken) %>%
-                 distinct() %>%
-                 arrange(ArtistToken) %>%
-                 pull(ArtistToken)
-  )
+    artist_choices<-reactive_artists_letters()
+    selectInput("artist_selection", h3("Select Artist Token (Might be a long list):"),
+                choices = artist_choices
+    )
   })
   output$artist_history_plot <- renderPlot({
     artist_history<-reactive_artists()

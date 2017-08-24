@@ -139,10 +139,15 @@ shinyUI(
                       sidebarLayout(
                         # Sidebar with a slider and selection inputs
                         sidebarPanel(
-                          h5('Artist Token is first two words of artist/band with no space.'),
-                          textInput("artist_letters", label = h3("Artist Token"), value = "Abba"),
+                          h5('1) Type a few letters of the artist name then click "Find Artists."'),
+                          h5('     The more letters you type the faster the search will be.'),
+                          h5('     Type no more than the first word in the artist name.'),
+                          h5('     " Check the word cloud on the first page for abbreviations in use. Rolling Stones will be found by typing "Stones."'),
+                          textInput("artist_letters", label = h3("Give me a clue!"), value = "Abba"),
+                          actionButton("artist_update_1","Find Artists"),
+                          h5('2) Choose one of the artists from the list below'),
                           uiOutput('SelectArtist'),
-                          hr(),
+                          h5('3) Change the date range?'),
                           sliderInput("artist_years_range",
                                       "Year Range:",
                                       min = min_year,
@@ -150,11 +155,13 @@ shinyUI(
                                       sep = "",
                                       value = c(2002,year(Sys.Date()))),
                           fluidRow(
+                            h5('4) Any play count less then threshold will be lumped into "all other"'),
                             selectInput("artist_all_other",
                                         "Threshold of Minimum Plays to show DJ",
                                         selected = 3,
-                                        choices=1:10),
-                            actionButton("artist_update","Update")
+                                        choices=1:9),
+                            h5("5) Click to show play counts"),
+                            actionButton("artist_update_2","Tabulate Plays")
                           )
                         ),
                         
