@@ -17,6 +17,7 @@ library(lubridate)
 library(igraph)
 library(circlize)
 library(xts)
+library(stringr)
 
 
 # ----------------- STUFF FOR STATION TAB -----------------------------
@@ -360,7 +361,18 @@ shinyServer(function(input, output) {
     })
     return(ret_val)
   })
-  
+
+  output$SelectArtist<-renderUI({
+   selectInput("artist_selection", "Select Artist Token (It's a long list. Slow):",
+               choices = playlists %>%
+                 ungroup() %>%
+                 filter(grepl(paste0("^",str_to_title(input$artist_letters)),ArtistToken)) %>% 
+                 select(ArtistToken) %>%
+                 distinct() %>%
+                 arrange(ArtistToken) %>%
+                 pull(ArtistToken)
+  )
+  })
   output$artist_history_plot <- renderPlot({
     artist_history<-reactive_artists()
     gg<-artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ShowName))+geom_col()

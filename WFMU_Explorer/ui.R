@@ -140,24 +140,15 @@ shinyUI(
                         # Sidebar with a slider and selection inputs
                         sidebarPanel(
                           h5('Artist Token is first two words of artist/band with no space.'),
-                          selectInput("artist_selection", "Select Artist Token (It's a long list. Slow):",
-                                      selected='Abba',
-                                      #quicker to generate or load      
-                                      choices=ArtistToken_list
-                                      # choices = playlists %>%
-                                      #   ungroup() %>%
-                                      #   select(ArtistToken) %>%
-                                      #   distinct() %>%
-                                      #   arrange(ArtistToken) %>%
-                                      #   pull(ArtistToken)
-                          ),
+                          textInput("artist_letters", label = h3("Artist Token"), value = "Abba"),
+                          uiOutput('SelectArtist'),
                           hr(),
                           sliderInput("artist_years_range",
                                       "Year Range:",
                                       min = min_year,
                                       max = year(Sys.Date()),
                                       sep = "",
-                                      value = c(year(Sys.Date())-3,year(Sys.Date()))),
+                                      value = c(2002,year(Sys.Date()))),
                           fluidRow(
                             selectInput("artist_all_other",
                                         "Threshold of Minimum Plays to show DJ",
