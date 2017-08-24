@@ -172,14 +172,18 @@ play_count_by_DJ<-memoise(function(artist_token,years_range,threshold){
     mutate(ShowName='AllOther')
   
   pc<-pc1 %>% 
-    left_join(DJKey) %>% 
+    left_join(DJKey,by='DJ') %>% 
     bind_rows(pc2) %>% 
+    ungroup() %>% 
     select(AirDate,ShowName,Spins)
   return(pc)
 })
 
-top_songs_for_artist<-memoise(function(artist_token){
-  ts<-playlists %>% filter(ArtistToken==artist_token) %>% 
+top_songs_for_artist<-memoise(function(artist_token,years_range){
+  ts<-playlists %>% 
+    filter(ArtistToken==artist_token) %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
     group_by(Title) %>% 
     summarise(count=n()) %>% 
     arrange(desc(count))
@@ -365,7 +369,7 @@ shinyServer(function(input, output) {
     gg
   })
   output$top_songs_for_artist<-renderTable({
-    top_songs_for_artist(input$artist_selection)
+    top_songs_for_artist(input$artist_selection,input$artist_years_range)
   })
   # ------------------ SONG TAB -----------------
   
