@@ -249,9 +249,7 @@ shinyServer(function(input, output) {
     
   })
   
-  top_artists_reactive_DJ<-reactive({
-    input$DJ_update
-    isolate({      
+  top_artists_process_DJ<-function(){
       withProgress({
         setProgress(message = "Processing...")
         DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
@@ -262,12 +260,27 @@ shinyServer(function(input, output) {
         }
         ret_val<-get_top_artists_DJ(DJ,years_range)
       })
-    })
     return(ret_val)
-  })
-  top_songs_reactive_DJ<-reactive({
-    input$DJ_update
-    isolate({      
+  }
+  
+  # top_artists_reactive_DJ<-reactive({
+  #   input$DJ_update
+  #   isolate({      
+  #     withProgress({
+  #       setProgress(message = "Processing...")
+  #       DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
+  #       if (is.null(input$DJ_years_range)) {
+  #         years_range<-c(1982,year(Sys.Date()))
+  #       } else{
+  #         years_range <- input$DJ_years_range
+  #       }
+  #       ret_val<-get_top_artists_DJ(DJ,years_range)
+  #     })
+  #   })
+  #   return(ret_val)
+  # })
+  # 
+  top_songs_process_DJ<-function(){
       withProgress({
         setProgress(message = "Processing...")
         DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
@@ -278,13 +291,28 @@ shinyServer(function(input, output) {
         }
         ret_val<-get_top_songs_DJ(DJ,years_range)
       })
-    })
     return(ret_val)
-  })
-  
+  }
+  # top_songs_reactive_DJ<-reactive({
+  #   input$DJ_update
+  #   isolate({      
+  #     withProgress({
+  #       setProgress(message = "Processing...")
+  #       DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
+  #       if (is.null(input$DJ_years_range)) {
+  #         years_range<-c(1982,year(Sys.Date()))
+  #       } else{
+  #         years_range <- input$DJ_years_range
+  #       }
+  #       ret_val<-get_top_songs_DJ(DJ,years_range)
+  #     })
+  #   })
+  #   return(ret_val)
+  # })
+  # 
   output$DJ_cloud <- renderPlot({
     wordcloud_rep <- repeatable(wordcloud,seed=1234)
-    top_artists<-top_artists_reactive_DJ() 
+    top_artists<-top_artists_process_DJ() 
     scaleFactor=2
     wordcloud_rep(words = top_artists$ArtistToken, 
                   freq = top_artists$play_count^scaleFactor,
@@ -294,10 +322,10 @@ shinyServer(function(input, output) {
                   scale = c(4,.3))
   })
   output$DJ_table_artists <- renderTable({
-    top_artists_reactive_DJ()
+    top_artists_process_DJ()
   })
   output$DJ_table_songs <- renderTable({
-    top_songs_reactive_DJ()
+    top_songs_process_DJ()
   })
   
   output$DJ_table_similar <- renderTable({
@@ -348,7 +376,7 @@ shinyServer(function(input, output) {
     artists_in_common(dj1,dj2)
   })
   
-  #------------------------------ARTIST TAB-----------------------------------
+  #------------------- ARTIST TAB-----------------------------------
   reactive_artists_letters<-reactive({
     input$artist_update_1
     isolate({      
@@ -365,28 +393,39 @@ shinyServer(function(input, output) {
     })
     return(ret_val)
   })
-  
-  reactive_artists<-reactive({
-    input$artist_update_2
-    isolate({      
+
+  # reactive_artists<-reactive({
+  #   input$artist_update_2
+  #   isolate({
+  #     withProgress({
+  #       setProgress(message = "Processing...")
+  #       ret_val<-play_count_by_DJ(input$artist_selection,
+  #                                 input$artist_years_range,
+  #                                 input$artist_all_other)
+  #     })
+  #   })
+  #   return(ret_val)
+  # })
+
+  process_artists<-function(){
       withProgress({
         setProgress(message = "Processing...")
         ret_val<-play_count_by_DJ(input$artist_selection,
                                   input$artist_years_range,
                                   input$artist_all_other)
       })
-    })
     return(ret_val)
-  })
+  }
   
   output$SelectArtist<-renderUI({
     artist_choices<-reactive_artists_letters()
-    selectInput("artist_selection", h3("Select Artist Token (Might be a long list):"),
-                choices = artist_choices
+    selectInput("artist_selection", h5("Select Artist"),
+                choices = artist_choices,
+                selected= "Abba"
     )
   })
   output$artist_history_plot <- renderPlot({
-    artist_history<-reactive_artists()
+    artist_history<-process_artists()
     gg<-artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ShowName))+geom_col()
     gg<-gg+labs(title=paste("Number of",input$artist_selection,"plays every quarter by DJ"))
     gg<-gg+scale_x_continuous()

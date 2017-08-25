@@ -16,7 +16,7 @@ shinyUI(
                         sidebarPanel(
                           selectInput("selection", "Are the DJs On Current Schedule?:",
                                       choices = c('YES','NO','ALL')),
-                          hr(),
+                          h4('Be aware a wide date range could take many seconds to process.'),
                           sliderInput("years_range",
                                       "Year Range:",
                                       min = min_year,
@@ -52,8 +52,8 @@ shinyUI(
                                                  choices = DJKey$ShowName,
                                                  selected = 'Teenage Wasteland'),
                                      hr(),
-                                     uiOutput("DJ_date_slider"),
-                                     actionButton("DJ_update","Update")
+                                     uiOutput("DJ_date_slider") 
+                                     #, actionButton("DJ_update","Update")
                                    ),
                                    
                                    # Show Word Cloud
@@ -139,15 +139,14 @@ shinyUI(
                       sidebarLayout(
                         # Sidebar with a slider and selection inputs
                         sidebarPanel(
-                          h5('1) Type a few letters of the artist name then click "Find Artists."'),
-                          h5('     The more letters you type the faster the search will be.'),
+                          h4('1) Type a few letters of the artist name then click "Find Artists."'),
                           h5('     Type no more than the first word in the artist name.'),
-                          h5('     " Check the word cloud on the first page for abbreviations in use. Rolling Stones will be found by typing "Stones."'),
-                          textInput("artist_letters", label = h3("Give me a clue!"), value = "Abba"),
+                          h5('     Check the word cloud on the first page for abbreviations in use. Rolling Stones will be found by typing "Stones."'),
+                          textInput("artist_letters", label = h4("Give me a clue!"), value = "Abba"),
                           actionButton("artist_update_1","Find Artists"),
-                          h5('2) Choose one of the artists from the list below'),
+                          h4('2) Now choose the specific artist.'),
                           uiOutput('SelectArtist'),
-                          h5('3) Change the date range?'),
+                          h4('3) Change the date range?'),
                           sliderInput("artist_years_range",
                                       "Year Range:",
                                       min = min_year,
@@ -155,29 +154,28 @@ shinyUI(
                                       sep = "",
                                       value = c(2002,year(Sys.Date()))),
                           fluidRow(
-                            h5('4) Any play count less then threshold will be lumped into "all other"'),
+                            h4('4) Change threshold to show DJ?'),
                             selectInput("artist_all_other",
                                         "Threshold of Minimum Plays to show DJ",
                                         selected = 3,
-                                        choices=1:9),
-                            h5("5) Click to show play counts"),
-                            actionButton("artist_update_2","Tabulate Plays")
+                                        choices=1:9)
                           )
                         ),
                         
                         mainPanel(
                           fluidRow(
-                            h4('Plays per Quarter'),
+                            h4('Artist Plays per Quarter'),
                             plotOutput("artist_history_plot"),
+                            h4('Songs Played by Artist'),
                             tableOutput('top_songs_for_artist')
                           )
                         )
                       )
              ),
              # --------- Songs/ ----------------------------------
-             tabPanel("Songs",
-                      titlePanel("Nothing Here Yet")
-             ),
+             # tabPanel("Songs",
+             #          titlePanel("Nothing Here Yet")
+             # ),
              # --------- About/ ----------------------------------
              tabPanel("About",
                       mainPanel(
