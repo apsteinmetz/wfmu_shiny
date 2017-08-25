@@ -384,7 +384,7 @@ shinyServer(function(input, output) {
         setProgress(message = "Processing...")
         ret_val<-playlists %>%
           ungroup() %>%
-          filter(grepl(paste0("^",str_to_title(input$artist_letters)),ArtistToken)) %>% 
+          filter(grepl(str_to_title(input$artist_letters),ArtistToken)) %>% 
           select(ArtistToken) %>%
           distinct() %>%
           arrange(ArtistToken) %>%

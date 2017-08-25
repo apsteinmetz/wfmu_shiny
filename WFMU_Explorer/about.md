@@ -1,5 +1,5 @@
 ---
-title: "version: 0.32"
+title: "version: 0.33"
 date: "August 24, 2017"
 output: html_document
 ---
@@ -19,6 +19,8 @@ Thanks to station manager, Ken Freedman, for giving me permission to scrape the 
 WFMU is listener supported!  [PLEDGE HERE!](https://pledge.wfmu.org/donate?step=landing)
 
 -- Art Steinmetz (apsteinmetz@yahoo.com)
+
+*Changes in 0.33: Clue portion of artist name can be any word in the name, not just the first.
 
 *Changes in 0.32: UI more responsive.
 

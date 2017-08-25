@@ -140,8 +140,8 @@ shinyUI(
                         # Sidebar with a slider and selection inputs
                         sidebarPanel(
                           h4('1) Type a few letters of the artist name then click "Find Artists."'),
-                          h5('     Type no more than the first word in the artist name.'),
-                          h5('     Check the word cloud on the first page for abbreviations in use. Rolling Stones will be found by typing "Stones."'),
+                          h5('     Type no more than one word in the artist name.'),
+                          h5('     Check the word cloud on the first page for abbreviations in use. "Stones" will find The Rolling Stones'),
                           textInput("artist_letters", label = h4("Give me a clue!"), value = "Abba"),
                           actionButton("artist_update_1","Find Artists"),
                           h4('2) Now choose the specific artist.'),
