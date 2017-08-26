@@ -14,6 +14,10 @@ library(dplyr)
 library(rmarkdown)
 library(tidyverse)
 library(lubridate)
+library(igraph)
+library(circlize)
+library(xts)
+library(stringr)
 
 
 # ----------------- STUFF FOR STATION TAB -----------------------------
@@ -30,7 +34,7 @@ get_top_artists<-memoise(function(onAir,years_range) {
   top_artists<-DJ_set %>% 
     left_join(playlists,by='DJ') %>%
     ungroup() %>% 
-    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
     filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
     group_by(ArtistToken)%>%
     summarize(play_count=n())%>%
@@ -50,7 +54,7 @@ get_top_songs<-memoise(function(onAir,years_range) {
   }
   top_songs<-DJ_set %>% 
     ungroup() %>% 
-    filter(AirDate>=as.Date(paste0(years_range[1],"-1-31"))) %>%  
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
     filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
     group_by(artist_song)%>%
     summarize(play_count=n())%>%
@@ -86,33 +90,122 @@ get_top_songs_DJ<-memoise(function(dj,years_range) {
 })
 
 get_similar_DJs<-memoise(function(dj) {
-  dj_similarity_tidy %>% 
-  filter(DJ1==dj) %>% 
-  arrange(desc(Similarity)) %>% 
-  top_n(10) %>% 
-  ungroup() %>% 
-  rename(DJ=DJ2) %>% 
-  select(DJ,Similarity) %>% 
-  left_join(DJKey,by='DJ') %>% 
-  select(ShowName,DJ,onSched,showCount,Similarity) %>% 
-  mutate(Similarity=paste0(trunc(Similarity*100),"%"))
-similar_DJS
+  similar_DJs<-dj_similarity_tidy %>% 
+    filter(DJ1==dj) %>% 
+    arrange(desc(Similarity)) %>% 
+    top_n(10) %>% 
+    ungroup() %>% 
+    rename(DJ=DJ2) %>% 
+    select(DJ,Similarity) %>% 
+    left_join(DJKey,by='DJ') %>%
+    mutate(Similarity=paste0(trunc(Similarity*100),"%")) %>% 
+    #add target dj to top of table so we see the 2-letter code for the chord chart
+    full_join(filter(DJKey,DJ==dj)) %>% 
+    select(ShowName,DJ,onSched,showCount,Similarity) 
+  
+  similar_DJs
+})
+
+get_sim_index<-memoise(function(dj1,dj2) {
+  DJ_sim<-dj_similarity_tidy %>% 
+    filter(DJ1==dj1,DJ2==dj2) %>%
+    pull(Similarity)
+  DJ_sim
+})
+
+artists_in_common<-memoise(function(dj1,dj2){
+  artists<-playlists %>% 
+    filter(DJ %in% c(dj1,dj2)) %>% 
+    group_by(DJ,ArtistToken) %>% 
+    summarise(n=n()) %>%
+    spread(DJ,n) %>% 
+    mutate(sum_x=rowSums(.[2:ncol(.)],na.rm=TRUE)) %>% 
+    mutate(sd_x=.[2:ncol(.)] %>% na.fill(0) %>% apply(1,sd)) %>% 
+    mutate(FaveIndex=trunc(sum_x-1.8*sd_x)) %>% 
+    #select(ArtistToken,sum,FaveIndex) %>% 
+    top_n(10) %>% 
+    select(-sum_x,-sd_x) %>% 
+    arrange(desc(FaveIndex)) %>% 
+    select(-FaveIndex)
+  artists
+})
+
+songs_in_common<-memoise(function(dj1,dj2){
+  songs<-playlists %>% 
+    filter(DJ %in% c(dj1,dj2)) %>%
+    mutate(Artist_Title=paste(Artist,Title)) %>% 
+    group_by(DJ,Artist_Title) %>% 
+    summarise(n=n()) %>%
+    spread(DJ,n) %>% 
+    mutate(sum_x=rowSums(.[2:ncol(.)],na.rm=TRUE)) %>% 
+    mutate(sd_x=.[2:ncol(.)] %>% na.fill(0) %>% apply(1,sd)) %>% 
+    mutate(FaveIndex=trunc((sum_x-1.8*sd_x)*10)) %>% #apply some arbitrary scaling
+    #select(ArtistToken,sum,FaveIndex) %>% 
+    top_n(10) %>% 
+    select(-sum_x,-sd_x) %>% 
+    arrange(desc(FaveIndex)) %>% 
+    select(-FaveIndex)
+  songs
 })
 
 
 # ----------------- STUFF FOR ARTIST TAB -----------------------------
+play_count_by_DJ<-memoise(function(artist_token,years_range,threshold=3){
+  pc<- playlists %>% 
+    ungroup() %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
+    mutate(DJ=as.character(DJ)) %>% 
+    filter(ArtistToken==artist_token) %>% 
+    mutate(AirDate=as.yearqtr(AirDate))  %>% 
+    group_by(AirDate,DJ) %>% 
+    summarise(Spins=n()) %>% 
+    arrange(AirDate)
+  
+  pc1<- pc %>% 
+    filter(Spins>=threshold)
+  
+  #lump together all DJ's who played the artist less than 'threshold' times
+  pc2<- pc %>%
+    ungroup() %>% 
+    filter(Spins<threshold) %>% 
+    group_by(AirDate) %>% 
+    summarise(Spins=sum(Spins)) %>% 
+    mutate(ShowName='AllOther')
+  
+  pc3<-pc1 %>% 
+    left_join(DJKey,by='DJ') %>% 
+    select(AirDate,Spins,ShowName) %>% 
+    full_join(pc2) %>%
+    ungroup()
+  
+  return(pc3)
+})
+
+top_songs_for_artist<-memoise(function(artist_token,years_range){
+  ts<-playlists %>% 
+    filter(ArtistToken==artist_token) %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
+    group_by(Title) %>% 
+    summarise(count=n()) %>% 
+    arrange(desc(count))
+  return(ts)
+})
+
+
 # ----------------- STUFF FOR SONG TAB -----------------------------
 
 
-# --------------------------------------------------------------
-# Define server logic
+# ----------------- Define server logic ----------
+
 shinyServer(function(input, output) {
   # ------------------ STATION TAB -----------------
   top_artists_reactive<-reactive({
     input$update
     isolate({      
       withProgress({
-        setProgress(message = "Processing...")
+        setProgress(message = "Processing Artists...")
         ret_val<-get_top_artists(input$selection,input$years_range)
       })
     })
@@ -122,7 +215,7 @@ shinyServer(function(input, output) {
     input$update
     isolate({      
       withProgress({
-        setProgress(message = "Processing...")
+        setProgress(message = "Processing Songs...")
         ret_val<-get_top_songs(input$selection,input$years_range)
       })
     })
@@ -158,42 +251,70 @@ shinyServer(function(input, output) {
     
   })
   
-  top_artists_reactive_DJ<-reactive({
-    input$DJ_update
-    isolate({      
-      withProgress({
-        setProgress(message = "Processing...")
-        DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
-        if (is.null(input$DJ_years_range)) {
-          years_range<-c(1982,year(Sys.Date()))
-        } else{
-          years_range <- input$DJ_years_range
-        }
-        ret_val<-get_top_artists_DJ(DJ,years_range)
-      })
+  top_artists_process_DJ<-function(){
+    withProgress({
+      setProgress(message = "Processing Artists...")
+      DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
+      if (is.null(input$DJ_years_range)) {
+        years_range<-c(1982,year(Sys.Date()))
+      } else{
+        years_range <- input$DJ_years_range
+      }
+      ret_val<-get_top_artists_DJ(DJ,years_range)
     })
     return(ret_val)
-  })
-  top_songs_reactive_DJ<-reactive({
-    input$DJ_update
-    isolate({      
-      withProgress({
-        setProgress(message = "Processing...")
-        DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
-        if (is.null(input$DJ_years_range)) {
-          years_range<-c(1982,year(Sys.Date()))
-        } else{
-          years_range <- input$DJ_years_range
-        }
-        ret_val<-get_top_songs_DJ(DJ,years_range)
-      })
-    })
-    return(ret_val)
-  })
+  }
   
+  # top_artists_reactive_DJ<-reactive({
+  #   input$DJ_update
+  #   isolate({      
+  #     withProgress({
+  #       setProgress(message = "Processing Artitsts...")
+  #       DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
+  #       if (is.null(input$DJ_years_range)) {
+  #         years_range<-c(1982,year(Sys.Date()))
+  #       } else{
+  #         years_range <- input$DJ_years_range
+  #       }
+  #       ret_val<-get_top_artists_DJ(DJ,years_range)
+  #     })
+  #   })
+  #   return(ret_val)
+  # })
+  # 
+  top_songs_process_DJ<-function(){
+    withProgress({
+      setProgress(message = "Processing Songs...")
+      DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
+      if (is.null(input$DJ_years_range)) {
+        years_range<-c(1982,year(Sys.Date()))
+      } else{
+        years_range <- input$DJ_years_range
+      }
+      ret_val<-get_top_songs_DJ(DJ,years_range)
+    })
+    return(ret_val)
+  }
+  # top_songs_reactive_DJ<-reactive({
+  #   input$DJ_update
+  #   isolate({      
+  #     withProgress({
+  #       setProgress(message = "Processing Songs...")
+  #       DJ<-filter(DJKey,ShowName==input$show_selection) %>% pull(DJ)
+  #       if (is.null(input$DJ_years_range)) {
+  #         years_range<-c(1982,year(Sys.Date()))
+  #       } else{
+  #         years_range <- input$DJ_years_range
+  #       }
+  #       ret_val<-get_top_songs_DJ(DJ,years_range)
+  #     })
+  #   })
+  #   return(ret_val)
+  # })
+  # 
   output$DJ_cloud <- renderPlot({
     wordcloud_rep <- repeatable(wordcloud,seed=1234)
-    top_artists<-top_artists_reactive_DJ() 
+    top_artists<-top_artists_process_DJ() 
     scaleFactor=2
     wordcloud_rep(words = top_artists$ArtistToken, 
                   freq = top_artists$play_count^scaleFactor,
@@ -203,10 +324,10 @@ shinyServer(function(input, output) {
                   scale = c(4,.3))
   })
   output$DJ_table_artists <- renderTable({
-    top_artists_reactive_DJ()
+    top_artists_process_DJ()
   })
   output$DJ_table_songs <- renderTable({
-    top_songs_reactive_DJ()
+    top_songs_process_DJ()
   })
   
   output$DJ_table_similar <- renderTable({
@@ -214,8 +335,10 @@ shinyServer(function(input, output) {
     get_similar_DJs(dj1)
   })
   output$DJ_chord <- renderPlot({
-    similar_DJs<-get_similar_DJs(dj1)$DJ
-    dj_mat<-dj_mat<-as.matrix(djdtm[c(similar_DJs,dj1),])
+    dj1<-filter(DJKey,ShowName==input$show_selection_2) %>% pull(DJ)
+    # get similar djs but remove target dj or matrix stuff will break
+    sim_DJs<-get_similar_DJs(dj1) %>% filter(DJ!=dj1) %>% pull(DJ)
+    dj_mat<-dj_mat<-as.matrix(djdtm[c(sim_DJs,dj1),])
     adj_mat1 = dj_mat %*% t(dj_mat)
     # set zeros in diagonal
     diag(adj_mat1) = 0
@@ -231,21 +354,88 @@ shinyServer(function(input, output) {
     lwds = w1/20000
     #chord diagrams
     cdf<-bind_cols(as_tibble(edges1),value=lwds)
-    #reorder columns gets a better appearance
-    #cdf<- cdf %>% select(V2,V1,value)
-    #make show names compact
-    #cdf$V2<-str_replace_all(cdf$V2,"[^A-Z^a-z^ ^0-9]","")
-    #cdf$V1<-str_replace_all(cdf$V1,"[^A-Z^a-z^ ^0-9]","")
-    #cdf<-cdf %>% lapply(str_replace_all,"The ","") %>% bind_rows
-    #cdf<-cdf %>% lapply(str_trim) %>% bind_rows
-    #cdf<-cdf %>% lapply(str_replace_all," ",'\n') %>% bind_rows
-    #cdf$value <- as.numeric(cdf$value)
     colset<-RColorBrewer::brewer.pal(11,'Paired')
     chordDiagram(cdf,annotationTrack = c('grid','name'),grid.col = colset)
     
   })
   
-  # ------------------ ARTIST TAB -----------------
+  output$DJ_plot_sim_index <- renderPlot({
+    dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
+    dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
+    ggplot(dj_similarity_tidy,aes(Similarity))+
+      geom_density()+
+      geom_vline(xintercept = get_sim_index(dj1,dj2),color='blue')
+  })
+  
+  output$DJ_table_common_songs <- renderTable({
+    dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
+    dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
+    songs_in_common(dj1,dj2)
+  })
+  output$DJ_table_common_artists <- renderTable({
+    dj1<-filter(DJKey,ShowName==input$show_selection_3) %>% pull(DJ)
+    dj2<-filter(DJKey,ShowName==input$show_selection_4) %>% pull(DJ)
+    artists_in_common(dj1,dj2)
+  })
+  
+  #------------------- ARTIST TAB-----------------------------------
+  reactive_artists_letters<-reactive({
+    input$artist_update_1
+    isolate({      
+      withProgress({
+        setProgress(message = "Processing...")
+        ret_val<-playlists %>%
+          ungroup() %>%
+          filter(grepl(str_to_title(input$artist_letters),ArtistToken)) %>% 
+          select(ArtistToken) %>%
+          distinct() %>%
+          arrange(ArtistToken) %>%
+          pull(ArtistToken)
+      })
+    })
+    return(ret_val)
+  })
+  
+  # reactive_artists<-reactive({
+  #   input$artist_update_2
+  #   isolate({
+  #     withProgress({
+  #       setProgress(message = "Processing...")
+  #       ret_val<-play_count_by_DJ(input$artist_selection,
+  #                                 input$artist_years_range,
+  #                                 input$artist_all_other)
+  #     })
+  #   })
+  #   return(ret_val)
+  # })
+  
+  process_artists<-function(){
+    withProgress({
+      setProgress(message = "Processing...")
+      ret_val<-play_count_by_DJ(input$artist_selection,
+                                input$artist_years_range,
+                                input$artist_all_other)
+    })
+    return(ret_val)
+  }
+  
+  output$SelectArtist<-renderUI({
+    artist_choices<-reactive_artists_letters()
+    selectInput("artist_selection", h5("Select Artist"),
+                choices = artist_choices,
+                selected= "Abba"
+    )
+  })
+  output$artist_history_plot <- renderPlot({
+    artist_history<-process_artists()
+    gg<-artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ShowName))+geom_col()
+    gg<-gg+labs(title=paste("Number of",input$artist_selection,"plays every quarter by DJ"))
+    gg<-gg+scale_x_continuous()
+    gg
+  })
+  output$top_songs_for_artist<-renderTable({
+    top_songs_for_artist(input$artist_selection,input$artist_years_range)
+  })
   # ------------------ SONG TAB -----------------
   
   

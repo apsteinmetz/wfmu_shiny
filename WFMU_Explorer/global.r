@@ -2,6 +2,8 @@ library(rmarkdown)
 library(lubridate)
 library(dplyr)
 
+#setwd(paste0(getwd(),"/wfmu_explorer"))
+
 load('DJKey.RData')
 load("playlists.Rdata")
 load('djSimilarity.RData')
