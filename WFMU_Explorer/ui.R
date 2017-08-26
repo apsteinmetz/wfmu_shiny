@@ -115,7 +115,7 @@ shinyUI(
                                    column(6,
                                           h4('Similarity Index'),
                                           h5('Black curve is frequency of all DJ pair similarities. Vertical blue line is similarity of this pair.'),
-                                          h5(' The bulge at the low end show WFMU DJs are not very similar to each other, in general.')
+                                          h5(' The bulge at the low end shows WFMU DJs are not very similar to each other, in general.')
                                    ),
                                    column(6,
                                           plotOutput("DJ_plot_sim_index",height="100px")
