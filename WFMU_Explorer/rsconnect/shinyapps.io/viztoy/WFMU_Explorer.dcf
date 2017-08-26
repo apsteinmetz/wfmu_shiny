@@ -1,0 +1,11 @@
+name: WFMU_Explorer
+title: WFMU_Explorer
+account: viztoy
+server: shinyapps.io
+appId: 205728
+bundleId: 946817
+url: https://viztoy.shinyapps.io/WFMU_Explorer/
+when: 1503169229.94368
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: about.html
