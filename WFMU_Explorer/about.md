@@ -1,6 +1,6 @@
 ---
-title: "version: 0.33"
-date: "August 24, 2017"
+title: "version: 0.35"
+date: "August 27, 2017"
 output: html_document
 ---
 ![](https://wfmu.org/wp-content/uploads/2016/03/BadgeCourage.png) 
@@ -19,6 +19,8 @@ Thanks to station manager, Ken Freedman, for giving me permission to scrape the 
 WFMU is listener supported!  [PLEDGE HERE!](https://pledge.wfmu.org/donate?step=landing)
 
 -- Art Steinmetz (apsteinmetz@yahoo.com)
+
+*Changes in 0.35: Bug fixes. On/Off sched filtering fixed.  Data Set now includes many more shows where playlist links extended in to past years.  Known missing shows are Doug Shulkind and Greasy Kid Stuff.
 
 *Changes in 0.34: Bug fixes. Date sliders were losing January!  
 
