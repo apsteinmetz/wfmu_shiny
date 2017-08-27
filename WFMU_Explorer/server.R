@@ -43,14 +43,15 @@ get_top_artists<-memoise(function(onAir,years_range) {
   top_artists
 })
 
-get_top_songs<-memoise(function(onAir,years_range) {
+get_top_songs<-memoise(function(onAir='ALL',years_range) {
   if (onAir=='ALL') {
     DJ_set <-playlists
   } else {
-    DJ_set <-DJKey %>% 
+    some_djs<-DJKey %>% 
       filter(onSched==onAir) %>% #on Sched or off?
-      select(DJ) %>%  
-      left_join(playlists,by='DJ')
+      pull (DJ)
+    DJ_set <-playlists %>% 
+      filter(DJ %in% some_djs)
   }
   top_songs<-DJ_set %>% 
     ungroup() %>% 

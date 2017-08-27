@@ -15,7 +15,7 @@ shinyUI(
                         # Sidebar with a slider and selection inputs
                         sidebarPanel(
                           selectInput("selection", "Are the DJs On Current Schedule?:",
-                                      choices = c('YES','NO','ALL')),
+                                      choices = c('ALL','YES','NO')),
                           h4('Be aware a wide date range could take many seconds to process.'),
                           sliderInput("years_range",
                                       "Year Range:",
