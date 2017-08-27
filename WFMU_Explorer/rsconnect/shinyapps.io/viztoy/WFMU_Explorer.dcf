@@ -3,8 +3,8 @@ title: WFMU_Explorer
 account: viztoy
 server: shinyapps.io
 appId: 205728
-bundleId: 956568
+bundleId: 956572
 url: https://viztoy.shinyapps.io/WFMU_Explorer/
-when: 1503868778.15893
+when: 1503869097.15218
 asMultiple: FALSE
 asStatic: FALSE
