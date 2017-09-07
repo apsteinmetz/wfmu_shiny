@@ -174,9 +174,42 @@ shinyUI(
                       )
              ),
              # --------- Songs/ ----------------------------------
-             # tabPanel("Songs",
-             #          titlePanel("Nothing Here Yet")
-             # ),
+             tabPanel("Songs",
+                      titlePanel("Song Plays Over Time"),
+                      sidebarLayout(
+                        # Sidebar with a slider and selection inputs
+                        sidebarPanel(
+                          h4('1) Type a few letters of the song name then click "Find Songs."'),
+                          textInput("song_letters", label = h4("Give me a clue!"), value = "Born To Run"),
+                          actionButton("song_update_1","Find Song"),
+                          h4('2) Now choose the specific song.'),
+                          uiOutput('SelectSong'),
+                          h4('3) Change the date range?'),
+                          sliderInput("song_years_range",
+                                      "Year Range:",
+                                      min = min_year,
+                                      max = year(Sys.Date()),
+                                      sep = "",
+                                      value = c(2002,year(Sys.Date()))),
+                          fluidRow(
+                            h4('4) Change threshold to show DJ?'),
+                            selectInput("artist_all_other",
+                                        "Threshold of Minimum Plays to show DJ",
+                                        selected = 3,
+                                        choices=1:9)
+                          )
+                        ),
+                        
+                        mainPanel(
+                          fluidRow(
+                            h4('Song Plays per Quarter'),
+                            plotOutput("song_history_plot"),
+                            h4('Artists playing this song'),
+                            tableOutput('top_artists_for_song')
+                          )
+                        )
+                      )
+             ),
              # --------- About/ ----------------------------------
              tabPanel("About",
                       mainPanel(
