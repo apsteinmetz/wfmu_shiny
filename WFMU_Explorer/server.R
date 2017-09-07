@@ -196,6 +196,49 @@ top_songs_for_artist<-memoise(function(artist_token,years_range){
 
 
 # ----------------- STUFF FOR SONG TAB -----------------------------
+song_play_count_by_DJ<-memoise(function(song,years_range,threshold=3){
+  pc<- playlists %>% 
+    ungroup() %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
+    mutate(DJ=as.character(DJ)) %>% 
+    filter(Title==song) %>% 
+    mutate(AirDate=as.yearqtr(AirDate))  %>% 
+    group_by(AirDate,DJ) %>% 
+    summarise(Spins=n()) %>% 
+    arrange(AirDate)
+  
+  pc1<- pc %>% 
+    filter(Spins>=threshold)
+  
+  #lump together all DJ's who played the artist less than 'threshold' times
+  pc2<- pc %>%
+    ungroup() %>% 
+    filter(Spins<threshold) %>% 
+    group_by(AirDate) %>% 
+    summarise(Spins=sum(Spins)) %>% 
+    mutate(ShowName='AllOther')
+  
+  pc3<-pc1 %>% 
+    left_join(DJKey,by='DJ') %>% 
+    select(AirDate,Spins,ShowName) %>% 
+    full_join(pc2) %>%
+    ungroup()
+  
+  return(pc3)
+})
+
+top_artists_for_song<-memoise(function(song,years_range){
+  ts<-playlists %>% 
+    filter(Title==song) %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
+    group_by(ArtistToken) %>% 
+    summarise(count=n()) %>% 
+    arrange(desc(count))
+  return(ts)
+})
+
 
 
 # ----------------- Define server logic ----------
@@ -438,6 +481,50 @@ shinyServer(function(input, output) {
     top_songs_for_artist(input$artist_selection,input$artist_years_range)
   })
   # ------------------ SONG TAB -----------------
+  reactive_songs_letters<-reactive({
+    input$songs_update_1
+    isolate({      
+      withProgress({
+        setProgress(message = "Processing...")
+        ret_val<-playlists %>%
+          ungroup() %>%
+          filter(grepl(str_to_title(input$song_letters),Title)) %>% 
+          select(Title) %>%
+          distinct() %>%
+          arrange(Title) %>%
+          pull(Title)
+      })
+    })
+    return(ret_val)
+  })
+  
+  process_songs<-function(){
+    withProgress({
+      setProgress(message = "Processing...")
+      ret_val<-play_count_by_DJ(input$song_selection,
+                                input$song_years_range,
+                                input$song_all_other)
+    })
+    return(ret_val)
+  }
+  
+  output$SelectSong<-renderUI({
+    artist_choices<-reactive_songs_letters()
+    selectInput("artist_selection", h5("Select Song"),
+                choices = song_choices,
+                selected= "Born To Run"
+    )
+  })
+  output$song_history_plot <- renderPlot({
+    song_history<-process_songs()
+    gg<-song_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ShowName))+geom_col()
+    gg<-gg+labs(title=paste("Number of",input$song_selection,"plays every quarter by DJ"))
+    gg<-gg+scale_x_continuous()
+    gg
+  })
+  output$top_artists_for_song<-renderTable({
+    top_artists_for_song(input$song_selection,input$song_years_range)
+  })
   
   
 })
