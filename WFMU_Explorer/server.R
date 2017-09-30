@@ -157,7 +157,7 @@ play_count_by_DJ<-memoise(function(artist_token,years_range,threshold=3){
     filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
     filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
     mutate(DJ=as.character(DJ)) %>% 
-    filter(ArtistToken==artist_token) %>% 
+    filter(ArtistToken %in% artist_token) %>% 
     mutate(AirDate=as.yearqtr(AirDate))  %>% 
     group_by(AirDate,DJ) %>% 
     summarise(Spins=n()) %>% 
@@ -182,10 +182,25 @@ play_count_by_DJ<-memoise(function(artist_token,years_range,threshold=3){
   
   return(pc3)
 })
+# -------------------------------------------
+play_count_by_artist<-memoise(function(artist_tokens,years_range){
+  pc<- playlists %>% 
+    ungroup() %>% 
+    filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
+    filter(ArtistToken %in% artist_tokens) %>% 
+    mutate(AirDate=year(AirDate))  %>% 
+    group_by(AirDate,ArtistToken) %>% 
+    summarise(Spins=n()) %>% 
+    arrange(AirDate)
+  
+  return(pc)
+})
+# --------------------------------------------------
 
 top_songs_for_artist<-memoise(function(artist_token,years_range){
   ts<-playlists %>% 
-    filter(ArtistToken==artist_token) %>% 
+    filter(ArtistToken %in% artist_token) %>% 
     filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
     filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
     group_by(Title) %>% 
@@ -379,7 +394,7 @@ shinyServer(function(input, output) {
     artists_in_common(dj1,dj2)
   })
   
-  #------------------- ARTIST TAB-----------------------------------
+  #------------------- SINGLE ARTIST TAB-----------------------------------
   reactive_artists_letters<-reactive({
     input$artist_update_1
     isolate({      
@@ -396,19 +411,7 @@ shinyServer(function(input, output) {
     })
     return(ret_val)
   })
-  
-  # reactive_artists<-reactive({
-  #   input$artist_update_2
-  #   isolate({
-  #     withProgress({
-  #       setProgress(message = "Processing...")
-  #       ret_val<-play_count_by_DJ(input$artist_selection,
-  #                                 input$artist_years_range,
-  #                                 input$artist_all_other)
-  #     })
-  #   })
-  #   return(ret_val)
-  # })
+
   
   process_artists<-function(){
     withProgress({
@@ -424,7 +427,8 @@ shinyServer(function(input, output) {
     artist_choices<-reactive_artists_letters()
     selectInput("artist_selection", h5("Select Artist"),
                 choices = artist_choices,
-                selected= "Abba"
+                selected= artist_choices[1],
+                multiple = TRUE
     )
   })
   output$artist_history_plot <- renderPlot({
@@ -437,6 +441,29 @@ shinyServer(function(input, output) {
   output$top_songs_for_artist<-renderTable({
     top_songs_for_artist(input$artist_selection,input$artist_years_range)
   })
+#-------------------- multi artist tab -----------------------
+  # reactive_multi_artists<-reactive({
+  #   input$artist_update_2
+  #   isolate({
+  #     withProgress({
+  #       setProgress(message = "Processing...")
+  #       multi_tokens<-word(input$multi_artists,1:50) %>% na.omit() %>% as.character()
+  #         ret_val<-play_count_by_artist(multi_tokens,
+  #                                   input$artist_years_range)
+  #     })
+  #   })
+  #   return(ret_val)
+  # })
+  # 
+  # 
+  # output$artist_history_plot <- renderPlot({
+  #   multi_artist_history<-reactive_multi_artists()
+  #   gg<-multi_artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ArtistToken))+geom_col()
+  #   gg<-gg+labs(title=paste("Annual Plays by Artist"))
+  #   gg<-gg+scale_x_continuous()
+  #   gg
+  # })
+  # 
   # ------------------ SONG TAB -----------------
   
   
