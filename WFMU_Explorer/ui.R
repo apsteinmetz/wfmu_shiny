@@ -15,7 +15,7 @@ shinyUI(
                         
                         # Sidebar with a slider and selection inputs
                         sidebarPanel(
-                          h4("Most Recent Date:"),
+                          h4("Last Playlist Update:"),
                           h4(textOutput("most_recent_date")),
                           
                           selectInput("selection", "Are the DJs On Current Schedule?:",

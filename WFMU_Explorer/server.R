@@ -262,7 +262,7 @@ shinyServer(function(input, output) {
     top_songs_reactive()$songs
   })
   output$text_song_count <- renderText({
-    paste("Plays found:",top_songs_reactive()$count)
+    paste("Plays found:",format(top_songs_reactive()$count,big.mark = ","))
   })
   # ------------------ DJ TAB -----------------
   output$DJ_date_slider <- renderUI({
