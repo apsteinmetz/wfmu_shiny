@@ -1,6 +1,6 @@
 ---
-title: "version: 0.35"
-date: "August 27, 2017"
+title: "version: 0.36"
+date: "October 1, 2017"
 output: html_document
 ---
 ![](https://wfmu.org/wp-content/uploads/2016/03/BadgeCourage.png) 
@@ -19,6 +19,10 @@ Thanks to station manager, Ken Freedman, for giving me permission to scrape the 
 WFMU is listener supported!  [PLEDGE HERE!](https://pledge.wfmu.org/donate?step=landing)
 
 -- Art Steinmetz (apsteinmetz@yahoo.com)
+
+*Changes in 0.36: Multi-select on artist tab.  Many artist entries are misspelled.  Ideally, you'll combine variants.  You can now select, say, "DustySpringfield" and "DusySprinfield" if you start your search with "du."  Searching for "el" will let you select "ELO and "ElectricLight" (as in Orchestra).
+
+Added a multi-artist tab.  Here you can compare more than one artist's plays over time.  At Ken's request the sizing of the plot is 710x355.  You can right-click "save as" in your browser to pull the image for further use.
 
 *Changes in 0.35: Bug fixes. On/Off sched filtering fixed.  Data Set now includes many more shows where playlist links extended in to past years.  Known missing shows are Doug Shulkind and Greasy Kid Stuff.
 

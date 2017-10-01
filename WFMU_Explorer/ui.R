@@ -206,15 +206,19 @@ shinyUI(
                                      actionButton("artist_update_2",
                                                   "Find Artists")
                                    ),
-
+                                   
                                    mainPanel(
                                      fluidRow(
-                                       h4('Artist Plays per Year'),
-                                       plotOutput("multi_artist_history_plot")
+                                       h4('Artist Plays per Year (light version)'),
+                                       plotOutput("multi_artist_history_plot",width = "710px",height="355px"),
+                                       h4('Artist Plays per Year (goth style)'),
+                                       plotOutput("multi_artist_history_plot_2",width = "710px",height="355px")
+                                       
                                      )
                                    )
+                                   
                                  )
-
+                                 
                         )
              ),
              # --------- Songs/ ----------------------------------

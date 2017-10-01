@@ -18,6 +18,8 @@ library(igraph)
 library(circlize)
 library(xts)
 library(stringr)
+library(ggplot2)
+library(ggthemes)
 
 
 # ----------------- STUFF FOR STATION TAB -----------------------------
@@ -466,12 +468,23 @@ shinyServer(function(input, output) {
 
   output$multi_artist_history_plot <- renderPlot({
     multi_artist_history<-reactive_multi_artists()
-    gg<-multi_artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ArtistToken))+geom_col()+theme_econ
+    gg<-multi_artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ArtistToken))+geom_col()
     gg<-gg+labs(title=paste("Annual Plays by Artist"))
+    gg<- gg+ theme_economist()
+    #gg<-gg+theme_solarized_2(light = FALSE) + scale_colour_solarized("red")
     gg<-gg+scale_x_continuous()
     gg
   })
 
+  output$multi_artist_history_plot_2 <- renderPlot({
+    multi_artist_history<-reactive_multi_artists()
+    gg<-multi_artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ArtistToken))+geom_col()
+    gg<-gg+labs(title=paste("Annual Plays by Artist"))
+    #gg<- gg+ theme_economist()
+    gg<-gg+theme_solarized_2(light = FALSE) + scale_colour_solarized("red")
+    gg<-gg+scale_x_continuous()
+    gg
+  })
   # ------------------ SONG TAB -----------------
   
   
