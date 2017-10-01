@@ -53,14 +53,17 @@ get_top_songs<-memoise(function(onAir='ALL',years_range) {
     DJ_set <-playlists %>% 
       filter(DJ %in% some_djs)
   }
-  top_songs<-DJ_set %>% 
+  all_songs<-DJ_set %>% 
     ungroup() %>% 
     filter(AirDate>=as.Date(paste0(years_range[1],"-1-1"))) %>%  
-    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31"))) %>%  
+    filter(AirDate<=as.Date(paste0(years_range[2],"-12-31")))
+  
+  top_songs<-list(songs=all_songs %>%  
     group_by(artist_song)%>%
     summarize(play_count=n())%>%
     top_n(25) %>% 
-    arrange(desc(play_count))
+    arrange(desc(play_count)))
+  top_songs$count<-nrow(all_songs)
   top_songs
 })
 # ----------------- STUFF FOR DJ TAB -----------------------------
@@ -238,6 +241,9 @@ shinyServer(function(input, output) {
     return(ret_val)
   })
   
+  output$most_recent_date<-renderText({
+    paste(max(playlists$AirDate)) #paste needed so date formats correctly. print doesn't do it.
+    })
   output$cloud <- renderPlot({
     wordcloud_rep <- repeatable(wordcloud,seed=1234)
     top_artists<-top_artists_reactive() 
@@ -253,7 +259,10 @@ shinyServer(function(input, output) {
     top_artists_reactive()
   })
   output$table_songs <- renderTable({
-    top_songs_reactive()
+    top_songs_reactive()$songs
+  })
+  output$text_song_count <- renderText({
+    paste("Plays found:",top_songs_reactive()$count)
   })
   # ------------------ DJ TAB -----------------
   output$DJ_date_slider <- renderUI({

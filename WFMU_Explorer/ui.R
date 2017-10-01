@@ -12,8 +12,12 @@ shinyUI(
                       titlePanel("Top Artists and Songs Played on WFMU"),
                       
                       sidebarLayout(
+                        
                         # Sidebar with a slider and selection inputs
                         sidebarPanel(
+                          h4("Most Recent Date:"),
+                          h4(textOutput("most_recent_date")),
+                          
                           selectInput("selection", "Are the DJs On Current Schedule?:",
                                       choices = c('ALL','YES','NO')),
                           h4('Be aware a wide date range could take many seconds to process.'),
@@ -24,6 +28,8 @@ shinyUI(
                                       sep = "",
                                       value = c(year(Sys.Date())-3,year(Sys.Date()))),
                           actionButton("update","Update")
+                          , textOutput("text_song_count")
+                          
                         ),
                         
                         # Show Word Cloud
@@ -31,7 +37,7 @@ shinyUI(
                           fluidRow(
                             h4('Top Artists'),
                             tabsetPanel(type = "tabs",
-                                        tabPanel("Word Cloud", plotOutput("cloud")),
+                                        tabPanel("Word Cloud", plotOutput("cloud",height="480px")),
                                         tabPanel("Table", tableOutput("table_artists"))
                             )),
                           fluidRow(
@@ -136,6 +142,7 @@ shinyUI(
              ),
              # --------- Artists/ ----------------------------------
              navbarMenu("Artists",
+                        #----------- Single Artist -----------------------
                         tabPanel("Single Artist",
                                  titlePanel("Artists Plays by DJ Over Time"),
                                  sidebarLayout(
@@ -175,6 +182,7 @@ shinyUI(
                                    )
                                  )
                         ) #,
+                        # --------------------- multi Artist ---------------
                         # tabPanel("Multi Artist",
                         #          titlePanel("Artists Plays Over Time"),
                         #          sidebarLayout(
