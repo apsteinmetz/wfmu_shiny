@@ -181,38 +181,41 @@ shinyUI(
                                      )
                                    )
                                  )
-                        ) #,
+                        ) ,
                         # --------------------- multi Artist ---------------
-                        # tabPanel("Multi Artist",
-                        #          titlePanel("Artists Plays Over Time"),
-                        #          sidebarLayout(
-                        #            # Sidebar with a slider and selection inputs
-                        #            sidebarPanel(
-                        #              h4('ArtistToken separated by spaces'),
-                        #              h5('Determine proper ArtistToken on Single Artist tab'),
-                        #              h5('This thing has no tolerace for misspelling!'),
-                        #              h5('Give there are nearly 40 thousand artists, a drop down list is impractical.'),
-                        #              textInput("multi_artists", label = h4("Tokens Separated by Spaces"), value = "Abba Stones Springsteen"),
-                        #              actionButton("artist_update_2","Find Artists"),
-                        #              uiOutput('SelectMultiArtists'),
-                        #              h4('Change the date range?'),
-                        #              sliderInput("multi_artist_years_range",
-                        #                          "Year Range:",
-                        #                          min = min_year,
-                        #                          max = year(Sys.Date()),
-                        #                          sep = "",
-                        #                          value = c(2002,year(Sys.Date())))
-                        #            ),
-                        #            
-                        #            mainPanel(
-                        #              fluidRow(
-                        #                h4('Artist Plays per Year'),
-                        #                plotOutput("multi_artist_history_plot")
-                        #              )
-                        #            )
-                        #          )
-                        #          
-                        # )
+                        tabPanel("Multi Artist",
+                                 titlePanel("Artists Plays Over Time"),
+                                 sidebarLayout(
+                                   # Sidebar with a slider and selection inputs
+                                   sidebarPanel(
+                                     h4('ArtistToken separated by spaces'),
+                                     h5('Determine proper ArtistToken on Single Artist tab.'),
+                                     h5('This thing has no tolerace for misspelling and is case-senstive!'),
+                                     h5('Given there are nearly 40 thousand artists, a drop down list is impractical.'),
+                                     textInput("multi_artists", 
+                                               label = h4("Tokens Separated by Spaces"), 
+                                               value = "JustinBeiber Rihanna CharlesManson"),
+                                     uiOutput('SelectMultiArtists'),
+                                     h4('Change the date range?'),
+                                     sliderInput("multi_artist_years_range",
+                                                 "Year Range:",
+                                                 min = min_year,
+                                                 max = year(Sys.Date()),
+                                                 sep = "",
+                                                 value = c(2005,year(Sys.Date()))),
+                                     actionButton("artist_update_2",
+                                                  "Find Artists")
+                                   ),
+
+                                   mainPanel(
+                                     fluidRow(
+                                       h4('Artist Plays per Year'),
+                                       plotOutput("multi_artist_history_plot")
+                                     )
+                                   )
+                                 )
+
+                        )
              ),
              # --------- Songs/ ----------------------------------
              # tabPanel("Songs",

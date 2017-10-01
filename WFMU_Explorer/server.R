@@ -153,7 +153,7 @@ songs_in_common<-memoise(function(dj1,dj2){
 })
 
 
-# ----------------- STUFF FOR ARTIST TAB -----------------------------
+# ----------------- STUFF FOR SINGLE ARTIST TAB -----------------------------
 play_count_by_DJ<-memoise(function(artist_token,years_range,threshold=3){
   pc<- playlists %>% 
     ungroup() %>% 
@@ -185,7 +185,7 @@ play_count_by_DJ<-memoise(function(artist_token,years_range,threshold=3){
   
   return(pc3)
 })
-# -------------------------------------------
+
 play_count_by_artist<-memoise(function(artist_tokens,years_range){
   pc<- playlists %>% 
     ungroup() %>% 
@@ -199,7 +199,6 @@ play_count_by_artist<-memoise(function(artist_tokens,years_range){
   
   return(pc)
 })
-# --------------------------------------------------
 
 top_songs_for_artist<-memoise(function(artist_token,years_range){
   ts<-playlists %>% 
@@ -403,7 +402,7 @@ shinyServer(function(input, output) {
     artists_in_common(dj1,dj2)
   })
   
-  #------------------- SINGLE ARTIST TAB-----------------------------------
+    #------------------- SINGLE ARTIST TAB-----------------------------------
   reactive_artists_letters<-reactive({
     input$artist_update_1
     isolate({      
@@ -450,29 +449,29 @@ shinyServer(function(input, output) {
   output$top_songs_for_artist<-renderTable({
     top_songs_for_artist(input$artist_selection,input$artist_years_range)
   })
-#-------------------- multi artist tab -----------------------
-  # reactive_multi_artists<-reactive({
-  #   input$artist_update_2
-  #   isolate({
-  #     withProgress({
-  #       setProgress(message = "Processing...")
-  #       multi_tokens<-word(input$multi_artists,1:50) %>% na.omit() %>% as.character()
-  #         ret_val<-play_count_by_artist(multi_tokens,
-  #                                   input$artist_years_range)
-  #     })
-  #   })
-  #   return(ret_val)
-  # })
-  # 
-  # 
-  # output$artist_history_plot <- renderPlot({
-  #   multi_artist_history<-reactive_multi_artists()
-  #   gg<-multi_artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ArtistToken))+geom_col()
-  #   gg<-gg+labs(title=paste("Annual Plays by Artist"))
-  #   gg<-gg+scale_x_continuous()
-  #   gg
-  # })
-  # 
+    #-------------------- multi artist tab -----------------------
+  reactive_multi_artists<-reactive({
+    input$artist_update_2
+    isolate({
+      withProgress({
+        setProgress(message = "Processing...")
+        multi_tokens<-word(input$multi_artists,1:50) %>% na.omit() %>% as.character()
+          ret_val<-play_count_by_artist(multi_tokens,
+                                    input$multi_artist_years_range)
+      })
+    })
+    return(ret_val)
+  })
+
+
+  output$multi_artist_history_plot <- renderPlot({
+    multi_artist_history<-reactive_multi_artists()
+    gg<-multi_artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ArtistToken))+geom_col()+theme_econ
+    gg<-gg+labs(title=paste("Annual Plays by Artist"))
+    gg<-gg+scale_x_continuous()
+    gg
+  })
+
   # ------------------ SONG TAB -----------------
   
   
