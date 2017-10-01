@@ -37,7 +37,7 @@ shinyUI(
                           fluidRow(
                             h4('Top Artists'),
                             tabsetPanel(type = "tabs",
-                                        tabPanel("Word Cloud", plotOutput("cloud",height="480px")),
+                                        tabPanel("Word Cloud", plotOutput("cloud")),
                                         tabPanel("Table", tableOutput("table_artists"))
                             )),
                           fluidRow(
@@ -153,7 +153,7 @@ shinyUI(
                                      h5('     Check the word cloud on the first page for iconic band abbreviations in use. "Stones" will find The Rolling Stones'),
                                      textInput("artist_letters", label = h4("Give me a clue!"), value = "Abba"),
                                      actionButton("artist_update_1","Find Artists"),
-                                     h4('2) Now choose the specific artist. Beware of misspellings!'),
+                                     h4('2) Click below to choose the specific artist. Beware of misspellings!'),
                                      h5('You can select more than one - use for variations in spelling.'),
                                      uiOutput('SelectArtist'),
                                      h4('3) Change the date range?'),

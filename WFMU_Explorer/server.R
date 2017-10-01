@@ -252,9 +252,12 @@ shinyServer(function(input, output) {
     wordcloud_rep(words = top_artists$ArtistToken, 
                   freq = top_artists$play_count^scaleFactor,
                   max.words=100, 
-                  random.order=FALSE,rot.per=0.35, 
+                  min.freq=20,
+                  random.order=FALSE, 
                   colors=brewer.pal(8, "Dark2"),
-                  scale = c(4,.3))
+                  scale = c(4,.5),
+                  #fixed.asp=FALSE,
+                  rot.per=0.35)
   })
   output$table_artists <- renderTable({
     top_artists_reactive()
