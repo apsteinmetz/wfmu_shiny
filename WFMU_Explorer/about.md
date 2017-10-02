@@ -5,6 +5,16 @@ output: html_document
 ---
 ![](https://wfmu.org/wp-content/uploads/2016/03/BadgeCourage.png) 
 
+<!-- Global Site Tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-107406537-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments)};
+  gtag('js', new Date());
+
+  gtag('config', 'UA-107406537-1');
+</script>
+
 ## About WFMU Playlist Explorer
 Free form radio, WFMU.ORG, maintains a huge trove of past playlists from many DJ's radio shows.  More recently, web-only programming has been added to this.  This dataset offers lots of opportunities for analysis.  I scraped all the playlists I could from the web site and started asking questions.  The data set is here for your own explorations. It represents over a million plays spanning decades.
 
@@ -15,6 +25,10 @@ There is a final step which is really a judgement call.  Many DJs have signature
 The end result is an reasonably accurate but incomplete record of all the playlists available at WFMU.ORG as of July 2017.  The code used for scraping,cleaning and analyzing is available at https://github.com/apsteinmetz/wfmu.
 
 Thanks to station manager, Ken Freedman, for giving me permission to scrape the site.
+
+wfmu.org is powered by KenzoDB ( http://kenzodb.com ) from Ken Garson Systems. Nice!
+
+This site is powered by Shiny by RStudio (https://www.rstudio.com/) and written in the R data science lanugage.
 
 WFMU is listener supported!  [PLEDGE HERE!](https://pledge.wfmu.org/donate?step=landing)
 
