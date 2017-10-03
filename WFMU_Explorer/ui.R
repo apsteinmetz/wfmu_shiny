@@ -7,6 +7,10 @@ library(dplyr)
 
 shinyUI(
   navbarPage("WFMU Playlist Explorer ALPHA VERSION",
+             # -- Add Tracking JS File 
+             #rest of UI doesn't initiate unless tab is clicked on if the code below runs
+             #tags$head(includeScript("google-analytics.js")),
+             
              # --------- Station/ ----------------------------------
              tabPanel("Station",
                       titlePanel("Top Artists and Songs Played on WFMU"),
