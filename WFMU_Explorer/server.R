@@ -21,6 +21,7 @@ library(stringr)
 library(ggplot2)
 library(ggthemes)
 
+HOST_URL<- "wfmu.servebeer.com"
 
 # ----------------- STUFF FOR STATION TAB -----------------------------
 get_top_artists<-memoise(function(onAir,years_range) {
@@ -258,6 +259,7 @@ shinyServer(function(input, output) {
                   scale = c(4,.5),
                   #fixed.asp=FALSE,
                   rot.per=0.35)
+    text(1,1,labels=HOST_URL)
   })
   output$table_artists <- renderTable({
     top_artists_reactive()
@@ -351,6 +353,7 @@ shinyServer(function(input, output) {
                   random.order=FALSE,rot.per=0.35, 
                   colors=brewer.pal(8, "Dark2"),
                   scale = c(4,.3))
+    text(1,1,labels=HOST_URL)
   })
   output$DJ_table_artists <- renderTable({
     top_artists_process_DJ()
@@ -385,6 +388,7 @@ shinyServer(function(input, output) {
     cdf<-bind_cols(as_tibble(edges1),value=lwds)
     colset<-RColorBrewer::brewer.pal(11,'Paired')
     chordDiagram(cdf,annotationTrack = c('grid','name'),grid.col = colset)
+    text(1,1,labels=HOST_URL)
     
   })
   
@@ -447,7 +451,8 @@ shinyServer(function(input, output) {
   output$artist_history_plot <- renderPlot({
     artist_history<-process_artists()
     gg<-artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ShowName))+geom_col()
-    gg<-gg+labs(title=paste("Number of",input$artist_selection,"plays every quarter by DJ"))
+    gg<-gg+labs(title=paste("Number of",input$artist_selection,"plays every quarter by DJ"),
+                caption=HOST_URL)
     gg<-gg+scale_x_continuous()
     gg
   })
@@ -472,7 +477,7 @@ shinyServer(function(input, output) {
   output$multi_artist_history_plot <- renderPlot({
     multi_artist_history<-reactive_multi_artists()
     gg<-multi_artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ArtistToken))+geom_col()
-    gg<-gg+labs(title=paste("Annual Plays by Artist"))
+    gg<-gg+labs(title=paste("Annual Plays by Artist"),caption=HOST_URL)
     gg<- gg+ theme_economist()
     #gg<-gg+theme_solarized_2(light = FALSE) + scale_colour_solarized("red")
     gg<-gg+scale_x_continuous()
@@ -482,7 +487,7 @@ shinyServer(function(input, output) {
   output$multi_artist_history_plot_2 <- renderPlot({
     multi_artist_history<-reactive_multi_artists()
     gg<-multi_artist_history %>% ggplot(aes(x=AirDate,y=Spins,fill=ArtistToken))+geom_col()
-    gg<-gg+labs(title=paste("Annual Plays by Artist"))
+    gg<-gg+labs(title=paste("Annual Plays by Artist"),caption=HOST_URL)
     #gg<- gg+ theme_economist()
     gg<-gg+theme_solarized_2(light = FALSE) + scale_colour_solarized("red")
     gg<-gg+scale_x_continuous()
